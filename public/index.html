@@ -87,7 +87,7 @@ async function runCommand(cmd) {
   printLine("> " + cmd);
 
   try {
-    const res = await fetch("http://localhost:3000/execute", {
+    const res = await fetch("https://kzcucjcyxybypncbdbws.supabase.co", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ raw: cmd })
