@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Kairos Terminal</title>
+
+  <style>
+    body {
+      margin: 0;
+      background: #000;
+      color: #00ff88;
+      font-family: monospace;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    #terminal {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    .line {
+      margin: 2px 0;
+    }
+
+    .system {
+      color: #888;
+    }
+
+    .error {
+      color: #ff4d4d;
+    }
+
+    .input-bar {
+      display: flex;
+      border-top: 1px solid #111;
+      padding: 10px;
+    }
+
+    input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #00ff88;
+      font-family: monospace;
+      font-size: 14px;
+    }
+
+    .prompt {
+      margin-right: 8px;
+      color: #555;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="terminal">
+  <div class="line system">Kairos Terminal v1.0</div>
+  <div class="line system">Type commands like: write idea "hello world"</div>
+  <div class="line system">────────────────────────────────────────────</div>
+</div>
+
+<div class="input-bar">
+  <span class="prompt">&gt;</span>
+  <input id="cmd" autocomplete="off" autofocus placeholder="enter command..." />
+</div>
+
+<script>
+const terminal = document.getElementById("terminal");
+const input = document.getElementById("cmd");
+
+function printLine(text, className = "") {
+  const div = document.createElement("div");
+  div.className = "line " + className;
+  div.textContent = text;
+  terminal.appendChild(div);
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
+async function runCommand(cmd) {
+  printLine("> " + cmd);
+
+  try {
+    const res = await fetch("https://kzcucjcyxybypncbdbws.supabase.co", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ raw: cmd })
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      printLine("ERROR: " + data.error, "error");
+    } else {
+      printLine(JSON.stringify(data, null, 2), "system");
+    }
+
+  } catch (err) {
+    printLine("Connection error: " + err.message, "error");
+  }
+}
+
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") {
+    const cmd = input.value.trim();
+    if (!cmd) return;
+
+    runCommand(cmd);
+    input.value = "";
+  }
+});
+</script>
+
+</body>
+</html>
