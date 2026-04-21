@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kairos Terminal · MVP Kernel</title>
+  <title>Kairos Terminal · Hare-Heart Hoard</title>
   <style>
     * {
       margin: 0;
@@ -135,7 +135,7 @@
 <div class="kairos-terminal">
   <div class="terminal-header">
     <div class="node-badge">
-      <span>⚡ KERNEL NODE #1</span> <strong>· DEEPSEEK</strong>
+      <span>⚡ KERNEL NODE #1</span> <strong>· HARE-HEART HOARD</strong>
     </div>
     <div class="status-led">
       <span class="led"></span>
@@ -144,15 +144,15 @@
   </div>
 
   <div id="terminal" class="terminal-output">
-    <div>Kairos Terminal v1.0 - Initializing...</div>
+    <div>Kairos Terminal v1.1 - Hare-Heart Hoard</div>
   </div>
 
   <div class="input-line">
     <span class="prompt-symbol">➜</span>
-    <input type="text" id="command" placeholder="type 'help' and press Enter" autofocus spellcheck="false" autocomplete="off">
+    <input type="text" id="command" placeholder="type 'help' for commands | 'list 1' for first page" autofocus spellcheck="false" autocomplete="off">
   </div>
   <div class="footer-hint">
-    commands: help, clear, schema, list, insert, query, random, forgotten, weave | ↑ history
+    📜 commands: help, list [page], count, search, insert, query, random, forgotten, weave, stats | ↑ history
   </div>
 </div>
 
@@ -205,7 +205,7 @@ async function processCommand(input) {
 }
 
 // ===============================
-// COMMAND HANDLERS (Using terminal_ tables)
+// COMMAND HANDLERS (UPDATED WITH PAGINATION)
 // ===============================
 
 commands.help = async () => {
@@ -213,7 +213,9 @@ commands.help = async () => {
   help        - Show this help message
   clear       - Clear terminal output
   schema      - Show table structure
-  list        - List all terminal_entries
+  list [page] - List entries (20 per page). Example: list 1, list 2
+  count       - Show total number of entries
+  search <text> - Search entries by label or body
   insert <json> - Insert entry (example: insert {"label":"test","body":"hello"})
   query [filter] - Query entries (example: query label=ashen_fragment)
   random      - Get random entry
@@ -230,7 +232,6 @@ commands.clear = async () => {
 commands.schema = async () => {
   let output = 'Terminal Database Schema:\n\n';
   
-  // Check terminal_entries
   try {
     const { data, error } = await db.from('terminal_entries').select('*').limit(1);
     if (error) throw error;
@@ -243,7 +244,6 @@ commands.schema = async () => {
     output += `❌ terminal_entries: ${err.message}\n`;
   }
   
-  // Check terminal_relationships
   try {
     const { data, error } = await db.from('terminal_relationships').select('*').limit(1);
     if (error) throw error;
@@ -256,31 +256,92 @@ commands.schema = async () => {
     output += `❌ terminal_relationships: ${err.message}\n`;
   }
   
-  // Check terminal_motifs
-  try {
-    const { data, error } = await db.from('terminal_motifs').select('*').limit(1);
-    if (error) throw error;
-    if (data && data.length > 0) {
-      output += `✓ terminal_motifs: ${Object.keys(data[0]).join(', ')}\n`;
-    } else {
-      output += `✓ terminal_motifs: (empty table)\n`;
-    }
-  } catch (err) {
-    output += `❌ terminal_motifs: ${err.message}\n`;
+  return output;
+};
+
+commands.count = async () => {
+  const { count, error } = await db
+    .from('terminal_entries')
+    .select('*', { count: 'exact', head: true });
+  
+  if (error) return `Error: ${error.message}`;
+  
+  const { count: relCount } = await db
+    .from('terminal_relationships')
+    .select('*', { count: 'exact', head: true });
+  
+  return `📊 Database Summary:
+  Terminal Entries: ${count}
+  Terminal Relationships: ${relCount || 0}
+  
+💡 Use "list 1" to browse entries (20 per page)`;
+};
+
+commands.search = async (args) => {
+  const searchTerm = args.join(' ');
+  if (!searchTerm) return 'Usage: search <text>';
+  
+  const { data, error } = await db
+    .from('terminal_entries')
+    .select('*')
+    .or(`label.ilike.%${searchTerm}%,body.ilike.%${searchTerm}%`)
+    .limit(50);
+  
+  if (error) return `Error: ${error.message}`;
+  if (!data || data.length === 0) return `No matches found for "${searchTerm}"`;
+  
+  let output = `🔍 Found ${data.length} matches for "${searchTerm}":\n\n`;
+  data.forEach(entry => {
+    output += `📝 ${entry.label}\n   ${entry.body?.substring(0, 80) || 'no body'}\n\n`;
+  });
+  
+  if (data.length === 50) {
+    output += `\n💡 Showing first 50 matches. Try a more specific search.`;
   }
   
   return output;
 };
 
-commands.list = async () => {
-  const { data, error } = await db.from('terminal_entries').select('*').order('created_at', { ascending: false });
-  if (error) return `Error: ${error.message}`;
-  if (!data || data.length === 0) return 'No entries found in terminal_entries';
+commands.list = async (args) => {
+  let page = 1;
+  let limit = 20;
   
-  let output = `Found ${data.length} entries:\n\n`;
-  data.forEach(entry => {
-    output += `📝 ${entry.label}\n   ID: ${entry.id}\n   Body: ${entry.body?.substring(0, 80) || 'no body'}${entry.body?.length > 80 ? '...' : ''}\n   Created: ${entry.created_at}\n\n`;
+  if (args.length > 0 && !isNaN(parseInt(args[0]))) {
+    page = parseInt(args[0]);
+  }
+  
+  const offset = (page - 1) * limit;
+  
+  const { count, error: countError } = await db
+    .from('terminal_entries')
+    .select('*', { count: 'exact', head: true });
+  
+  if (countError) return `Error: ${countError.message}`;
+  if (count === 0) return 'No entries found.';
+  
+  const totalPages = Math.ceil(count / limit);
+  
+  if (page > totalPages) {
+    return `Page ${page} doesn't exist. Total pages: ${totalPages}. Use "list 1" to start.`;
+  }
+  
+  const { data, error } = await db
+    .from('terminal_entries')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+  
+  if (error) return `Error: ${error.message}`;
+  
+  let output = `📋 Page ${page}/${totalPages} (${count} total entries):\n\n`;
+  
+  data.forEach((entry, idx) => {
+    const num = offset + idx + 1;
+    const bodyPreview = entry.body?.substring(0, 50) || '—';
+    output += `${num}. ${entry.label}\n   ${bodyPreview}${entry.body?.length > 50 ? '...' : ''}\n`;
   });
+  
+  output += `\n💡 Commands: "list ${page + 1}" (next), "list ${page - 1}" (prev), "search <term>" (find), "random" (surprise)`;
   return output;
 };
 
@@ -303,14 +364,12 @@ commands.insert = async (args) => {
 
 commands.query = async (args) => {
   if (args.length === 0) {
-    // No filter, return all
     const { data, error } = await db.from('terminal_entries').select('*').limit(20);
     if (error) return `Error: ${error.message}`;
     if (!data || data.length === 0) return 'No entries found';
     return data.map(row => `${row.label}: ${row.body?.substring(0, 60) || 'no body'}`).join('\n');
   }
   
-  // Parse filter (label=value)
   const filter = args[0];
   if (!filter.includes('=')) return 'Usage: query label=value';
   
@@ -350,9 +409,10 @@ commands.forgotten = async () => {
     if (forgotten.length === 0) return 'No forgotten entries found. All entries have relationships.';
     
     let output = `🌑 Forgotten Entries (${forgotten.length}):\n`;
-    forgotten.forEach(e => {
+    forgotten.slice(0, 20).forEach(e => {
       output += `  - ${e.label}: ${e.body ? e.body.substring(0, 50) : 'no body'}\n`;
     });
+    if (forgotten.length > 20) output += `\n  ... and ${forgotten.length - 20} more.`;
     return output;
   } catch (err) {
     return `Error: ${err.message}`;
@@ -365,7 +425,6 @@ commands.weave = async (args) => {
   const label = args[0];
   
   try {
-    // First find the entry
     const { data: entry, error: entryError } = await db
       .from('terminal_entries')
       .select('id, label')
@@ -374,7 +433,6 @@ commands.weave = async (args) => {
     
     if (entryError) return `Entry not found: ${label}`;
     
-    // Find relationships
     const { data: rel, error: relError } = await db
       .from('terminal_relationships')
       .select('target_id, type')
@@ -383,7 +441,6 @@ commands.weave = async (args) => {
     if (relError) return `Error: ${relError.message}`;
     if (!rel || rel.length === 0) return `No connections found for "${label}".`;
     
-    // Get connected entries
     const targetIds = rel.map(r => r.target_id);
     const { data: targets, error: targetsError } = await db
       .from('terminal_entries')
@@ -410,7 +467,7 @@ commands.stats = async () => {
   const { count: relCount, error: relError } = await db.from('terminal_relationships').select('*', { count: 'exact', head: true });
   if (relError && !relError.message.includes('does not exist')) return `Error: ${relError.message}`;
   
-  return `📊 Database Statistics:\n\nTerminal Entries: ${entryCount}\nTerminal Relationships: ${relCount || 0}\n\nType "list" to see all entries`;
+  return `📊 Database Statistics:\n\nTerminal Entries: ${entryCount}\nTerminal Relationships: ${relCount || 0}\n\n💡 Type "list 1" to browse entries.`;
 };
 
 // ===============================
@@ -426,9 +483,10 @@ window.addEventListener('DOMContentLoaded', () => {
   
   db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   
-  printLine('Kairos Terminal v1.0');
+  printLine('Kairos Terminal v1.1 - Hare-Heart Hoard');
   printLine('✓ Connected to Supabase');
-  printLine('✓ Using terminal_entries, terminal_relationships, terminal_motifs');
+  printLine('✓ Pagination enabled (20 entries per page)');
+  printLine('✓ Search functionality active');
   printLine('');
   printLine('Type "help" to see available commands\n');
   
