@@ -154,7 +154,7 @@
 const SUPABASE_URL = 'https://kzcucjcyxybypncbdbws.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw';
 
-let supabase = null;
+let db = null;
 const commands = {};
 let commandHistory = [];
 let historyIndex = -1;
@@ -250,7 +250,7 @@ commands.insert = async (rest) => {
     return 'Insert requires: label + body';
   }
 
-  const { error } = await supabase.from(table).insert(data);
+  const { error } = await db.from(table).insert(data);
   if (error) return error.message;
 
   return `✓ inserted into ${table}`;
@@ -259,7 +259,7 @@ commands.insert = async (rest) => {
 commands.query = async (rest) => {
   const parts = rest.split(' ');
   const table = parts[0];
-  let query = supabase.from(table).select('*');
+  let query = db.from(table).select('*');
 
   for (let i = 1; i < parts.length; i++) {
     if (parts[i].includes('=')) {
@@ -276,7 +276,7 @@ commands.query = async (rest) => {
 };
 
 commands.random = async () => {
-  const { data } = await supabase.from('entries').select('*');
+  const { data } = await db.from('entries').select('*');
   if (!data.length) return 'No entries';
 
   const r = data[Math.floor(Math.random() * data.length)];
@@ -284,8 +284,8 @@ commands.random = async () => {
 };
 
 commands.forgotten = async () => {
-  const { data: entries } = await supabase.from('entries').select('id,label');
-  const { data: rel } = await supabase.from('relationships').select('source_id');
+  const { data: entries } = await db.from('entries').select('id,label');
+  const { data: rel } = await db.from('relationships').select('source_id');
 
   const used = new Set(rel.map(r => r.source_id));
   const lost = entries.filter(e => !used.has(e.id));
@@ -299,7 +299,7 @@ commands.forgotten = async () => {
 commands.weave = async (rest) => {
   if (!rest) return 'Usage: weave <id>';
 
-  const { data: rel } = await supabase
+  const { data: rel } = await db
     .from('relationships')
     .select('*')
     .eq('source_id', rest);
@@ -308,7 +308,7 @@ commands.weave = async (rest) => {
 
   const ids = rel.map(r => r.target_id);
 
-  const { data: entries } = await supabase
+  const { data: entries } = await db
     .from('entries')
     .select('*')
     .in('id', ids);
@@ -322,7 +322,7 @@ commands.weave = async (rest) => {
 window.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById('command');
 
-  supabase = window.supabase.createClient(
+  db = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_ANON_KEY
   );
