@@ -70,6 +70,12 @@
       border-radius: 50%;
       background-color: #2ecc71;
       box-shadow: 0 0 6px #2ecc71;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 0.5; }
+      100% { opacity: 1; }
     }
 
     .terminal-output {
@@ -114,6 +120,10 @@
       padding: 0.3rem 0;
     }
 
+    #command:focus {
+      outline: none;
+    }
+
     .footer-hint {
       background: #03050780;
       font-size: 0.65rem;
@@ -138,7 +148,9 @@
   </div>
 
   <div id="terminal" class="terminal-output">
-    <div>Kairos Terminal v1.0 - Initializing...</div>
+    <div>Kairos Terminal v1.0 - Ready</div>
+    <div>Type 'help' to begin</div>
+    <div>&nbsp;</div>
   </div>
 
   <div class="input-line">
@@ -146,7 +158,7 @@
     <input type="text" id="command" placeholder="type 'help' and press Enter" autofocus spellcheck="false" autocomplete="off">
   </div>
   <div class="footer-hint">
-    commands: help, clear, schema, insert, query, random, forgotten
+    commands: help, clear, schema, insert, query, random, forgotten | ↑ history
   </div>
 </div>
 
@@ -159,22 +171,7 @@ const commands = {};
 let commandHistory = [];
 let historyIndex = -1;
 
-// ===============================
-// OUTPUT SYSTEM (Typing effect)
-// ===============================
-async function typeLine(text, speed = 8) {
-  const terminal = document.getElementById('terminal');
-  const line = document.createElement('div');
-  terminal.appendChild(line);
-
-  for (let i = 0; i < text.length; i++) {
-    line.textContent += text[i];
-    await new Promise(r => setTimeout(r, speed));
-  }
-
-  terminal.scrollTop = terminal.scrollHeight;
-}
-
+// Simple print without typing animation for immediate response
 function printLine(text) {
   const terminal = document.getElementById('terminal');
   const line = document.createElement('div');
@@ -183,187 +180,259 @@ function printLine(text) {
   terminal.scrollTop = terminal.scrollHeight;
 }
 
-// ===============================
-// PARSER (Aion-lite)
-// ===============================
-function parseCommand(input) {
-  const cmd = input.split(' ')[0];
-  const rest = input.slice(cmd.length).trim();
-  return { cmd: cmd.toLowerCase(), rest };
+// Optional: keep typing effect for certain outputs but make it faster
+async function typeLine(text, speed = 3) {
+  const terminal = document.getElementById('terminal');
+  const line = document.createElement('div');
+  terminal.appendChild(line);
+  
+  for (let i = 0; i < text.length; i++) {
+    line.textContent += text[i];
+    await new Promise(r => setTimeout(r, speed));
+  }
+  terminal.scrollTop = terminal.scrollHeight;
 }
 
-// ===============================
-// PROCESS COMMAND
-// ===============================
+// Parse command with arguments
+function parseCommand(input) {
+  const parts = input.trim().split(/\s+/);
+  const cmd = parts[0].toLowerCase();
+  const args = parts.slice(1);
+  return { cmd, args, rest: args.join(' ') };
+}
+
+// Process command
 async function processCommand(input) {
   if (!input.trim()) return;
-
-  const { cmd, rest } = parseCommand(input);
-
+  
+  const { cmd, args, rest } = parseCommand(input);
+  
   if (!commands[cmd]) {
-    return typeLine(`Unknown command: ${cmd}`);
+    printLine(`Unknown command: ${cmd}. Type 'help' for available commands.`);
+    return;
   }
-
+  
   try {
-    const result = await commands[cmd](rest);
-    if (result) await typeLine(result);
+    const result = await commands[cmd](args, rest);
+    if (result) {
+      // Use printLine for immediate response
+      if (typeof result === 'string' && result.includes('\n')) {
+        result.split('\n').forEach(line => printLine(line));
+      } else {
+        printLine(result);
+      }
+    }
   } catch (err) {
-    await typeLine(`Error: ${err.message}`);
+    printLine(`Error: ${err.message}`);
   }
 }
 
 // ===============================
-// COMMANDS
+// COMMAND HANDLERS
 // ===============================
+
 commands.help = async () => {
-  return `Commands:
-help
-clear
-schema
-insert <table> <json>
-query <table> key=value key=value
-random
-forgotten
-weave <id>`;
+  return `Available Commands:
+  help        - Show this help message
+  clear       - Clear terminal output
+  schema      - List all tables and their columns
+  insert <tr> <json> - Insert a row (example: insert entries {"label":"test","body":"hello"})
+  query <td> <filter> - Query table (example: query entries label=test)
+  random      - Return a random entry
+  forgotten   - Show entries with no relationships
+  weave <id>  - Show connections from an entry ID`;
 };
 
 commands.clear = async () => {
-  document.getElementById('terminal').innerHTML = '';
+  const terminal = document.getElementById('terminal');
+  terminal.innerHTML = '';
+  return null;
 };
 
-commands.insert = async (rest) => {
-  const firstSpace = rest.indexOf(' ');
-  if (firstSpace === -1) return 'Usage: insert <table> <json>';
-
-  const table = rest.slice(0, firstSpace);
-  const jsonStr = rest.slice(firstSpace + 1);
-
-  let data;
-  try {
-    data = JSON.parse(jsonStr);
-  } catch {
-    return 'Invalid JSON';
-  }
-
-  // AION VALIDATION LAYER
-  if (!data.label || !data.body) {
-    return 'Insert requires: label + body';
-  }
-
-  const { error } = await db.from(table).insert(data);
-  if (error) return error.message;
-
-  return `✓ inserted into ${table}`;
-};
-
-commands.query = async (rest) => {
-  const parts = rest.split(' ');
-  const table = parts[0];
-  let query = db.from(table).select('*');
-
-  for (let i = 1; i < parts.length; i++) {
-    if (parts[i].includes('=')) {
-      const [k, v] = parts[i].split('=');
-      query = query.eq(k, v);
+commands.schema = async () => {
+  const tables = ['entries', 'relationships', 'motifs'];
+  let output = 'Database Schema:\n';
+  
+  for (const table of tables) {
+    try {
+      const { data, error } = await db.from(table).select('*').limit(1);
+      if (error && error.message.includes('does not exist')) {
+        output += `\n❌ ${table}: table not found`;
+      } else if (data && data.length > 0) {
+        output += `\n✓ ${table}: ${Object.keys(data[0]).join(', ')}`;
+      } else {
+        output += `\n✓ ${table}: (empty table)`;
+      }
+    } catch (err) {
+      output += `\n❌ ${table}: error accessing`;
     }
   }
+  return output;
+};
 
+commands.insert = async (args, rest) => {
+  if (args.length < 2) return 'Usage: insert <td> <json>';
+  
+  const tableName = args[0];
+  const jsonStr = args.slice(1).join(' ');
+  
+  try {
+    const data = JSON.parse(jsonStr);
+    const { error } = await db.from(tableName).insert(data);
+    if (error) throw error;
+    return `✓ Inserted into '${tableName}'`;
+  } catch (err) {
+    return `Insert error: ${err.message}`;
+  }
+};
+
+commands.query = async (args) => {
+  if (args.length < 1) return 'Usage: query <tr> <filter>';
+  
+  const tableName = args[0];
+  let query = db.from(tableName).select('*');
+  
+  // Parse filters (key=value)
+  for (let i = 1; i < args.length; i++) {
+    if (args[i].includes('=')) {
+      const [key, value] = args[i].split('=');
+      query = query.eq(key, value);
+    }
+  }
+  
   const { data, error } = await query;
-  if (error) return error.message;
-  if (!data.length) return 'No results';
-
-  return data.map(d => JSON.stringify(d)).join('\n');
+  if (error) return `Query error: ${error.message}`;
+  if (!data || data.length === 0) return 'No results found';
+  
+  return data.map(row => JSON.stringify(row, null, 2)).join('\n');
 };
 
 commands.random = async () => {
-  const { data } = await db.from('entries').select('*');
-  if (!data.length) return 'No entries';
-
-  const r = data[Math.floor(Math.random() * data.length)];
-  return JSON.stringify(r, null, 2);
+  const { data, error } = await db.from('entries').select('*');
+  if (error) return `Error: ${error.message}`;
+  if (!data || data.length === 0) return 'No entries found. Insert some data first.';
+  
+  const random = data[Math.floor(Math.random() * data.length)];
+  return JSON.stringify(random, null, 2);
 };
 
 commands.forgotten = async () => {
-  const { data: entries } = await db.from('entries').select('id,label');
-  const { data: rel } = await db.from('relationships').select('source_id');
+  try {
+    const { data: entries, error: entriesError } = await db.from('entries').select('id, label, body');
+    if (entriesError) return `Error: ${entriesError.message}`;
+    if (!entries || entries.length === 0) return 'No entries found.';
+    
+    const { data: relations, error: relError } = await db.from('relationships').select('source_id');
+    if (relError && !relError.message.includes('does not exist')) {
+      return `Error checking relationships: ${relError.message}`;
+    }
+    
+    const usedIds = new Set((relations || []).map(r => r.source_id));
+    const forgotten = entries.filter(e => !usedIds.has(e.id));
+    
+    if (forgotten.length === 0) return 'No forgotten entries found. All entries have relationships.';
+    
+    let output = `Forgotten Entries (${forgotten.length}):`;
+    forgotten.forEach(e => {
+      output += `\n  - ${e.label}: ${e.body ? e.body.substring(0, 50) : 'no body'}`;
+    });
+    return output;
+  } catch (err) {
+    return `Error: ${err.message}`;
+  }
+};
 
-  const used = new Set(rel.map(r => r.source_id));
-  const lost = entries.filter(e => !used.has(e.id));
-
-  return lost.map(e => `- ${e.label}`).join('\n') || 'None';
+commands.weave = async (args) => {
+  if (args.length === 0) return 'Usage: weave <entry_id>';
+  
+  const entryId = args[0];
+  
+  try {
+    const { data: rel, error: relError } = await db
+      .from('relationships')
+      .select('*')
+      .eq('source_id', entryId);
+    
+    if (relError) return `Error: ${relError.message}`;
+    if (!rel || rel.length === 0) return 'No connections found for this entry.';
+    
+    const targetIds = rel.map(r => r.target_id);
+    const { data: entries, error: entriesError } = await db
+      .from('entries')
+      .select('id, label, body')
+      .in('id', targetIds);
+    
+    if (entriesError) return `Error: ${entriesError.message}`;
+    if (!entries || entries.length === 0) return 'Connected entries not found.';
+    
+    let output = `Connections from ${entryId}:`;
+    entries.forEach(e => {
+      output += `\n  → ${e.label}: ${e.body ? e.body.substring(0, 50) : 'no body'}`;
+    });
+    return output;
+  } catch (err) {
+    return `Error: ${err.message}`;
+  }
 };
 
 // ===============================
-// NEW: WEAVE (graph traversal)
-// ===============================
-commands.weave = async (rest) => {
-  if (!rest) return 'Usage: weave <id>';
-
-  const { data: rel } = await db
-    .from('relationships')
-    .select('*')
-    .eq('source_id', rest);
-
-  if (!rel.length) return 'No connections';
-
-  const ids = rel.map(r => r.target_id);
-
-  const { data: entries } = await db
-    .from('entries')
-    .select('*')
-    .in('id', ids);
-
-  return entries.map(e => `→ ${e.label}`).join('\n');
-};
-
-// ===============================
-// INIT
+// INITIALIZATION
 // ===============================
 window.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById('command');
-
-  supabase = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-  );
-
-  db = supabase;
-
-  printLine('Kairos Terminal v1.1');
-  printLine('RLS Secure · Aion Layer Active\n');
-
+  
+  // Initialize Supabase
+  if (!window.supabase) {
+    printLine('ERROR: Supabase client not loaded');
+    return;
+  }
+  
+  db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
+  // Test connection
+  printLine('✓ Connected to Supabase');
+  printLine('✓ Kernel ready');
+  printLine('');
+  
+  // Input handler - using both keydown and keypress for reliability
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
+      e.preventDefault();
       const val = input.value;
-
+      
       if (val.trim()) {
         printLine(`> ${val}`);
         processCommand(val);
-
+        
+        // Add to history
         commandHistory.push(val);
         historyIndex = commandHistory.length;
       }
-
+      
       input.value = '';
     }
-
+    
+    // Command history navigation
     if (e.key === 'ArrowUp') {
+      e.preventDefault();
       if (historyIndex > 0) {
         historyIndex--;
         input.value = commandHistory[historyIndex];
       }
     }
-
+    
     if (e.key === 'ArrowDown') {
+      e.preventDefault();
       if (historyIndex < commandHistory.length - 1) {
         historyIndex++;
         input.value = commandHistory[historyIndex];
-      } else {
+      } else if (historyIndex === commandHistory.length - 1) {
+        historyIndex++;
         input.value = '';
       }
     }
   });
-
+  
   input.focus();
 });
 </script>
