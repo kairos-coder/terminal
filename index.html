@@ -9,7 +9,6 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      user-select: none; /* prevent accidental text selection on double-click, but keeps copy/paste possible */
     }
 
     body {
@@ -22,11 +21,8 @@
       padding: 1.5rem;
     }
 
-    /* main terminal panel — brutalist / industrial */
     .kairos-terminal {
       background-color: #0b0e14;
-      background-image: linear-gradient(0deg, rgba(20, 25, 35, 0.4) 1px, transparent 1px);
-      background-size: 100% 2px;
       border: 1px solid #2a2f3f;
       border-radius: 12px;
       box-shadow: 0 20px 35px -12px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.02);
@@ -37,10 +33,8 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      backdrop-filter: blur(0px);
     }
 
-    /* header: node badge */
     .terminal-header {
       padding: 0.9rem 1.4rem;
       background: #07090e;
@@ -50,7 +44,6 @@
       align-items: baseline;
       flex-wrap: wrap;
       font-size: 0.8rem;
-      letter-spacing: 0.5px;
     }
 
     .node-badge {
@@ -91,7 +84,6 @@
       100% { opacity: 1; }
     }
 
-    /* scrollable output */
     .terminal-output {
       flex: 1;
       overflow-y: auto;
@@ -101,7 +93,6 @@
       line-height: 1.45;
       color: #d4e0ed;
       background: #0a0d14;
-      scroll-behavior: smooth;
     }
 
     .terminal-output div {
@@ -112,7 +103,6 @@
       margin-bottom: 0.25rem;
     }
 
-    /* command line area */
     .input-line {
       display: flex;
       align-items: center;
@@ -128,8 +118,6 @@
       color: #7aa2c7;
       font-weight: 600;
       font-size: 1rem;
-      background: none;
-      user-select: none;
     }
 
     #command {
@@ -144,13 +132,10 @@
       caret-color: #9bb8da;
     }
 
-    #command::placeholder {
-      color: #2e3a48;
-      font-style: italic;
-      letter-spacing: 0.2px;
+    #command:focus {
+      outline: none;
     }
 
-    /* scrollbar styling */
     .terminal-output::-webkit-scrollbar {
       width: 8px;
     }
@@ -164,11 +149,6 @@
       border-radius: 8px;
     }
 
-    .terminal-output::-webkit-scrollbar-thumb:hover {
-      background: #4a5a78;
-    }
-
-    /* helper small */
     .footer-hint {
       background: #03050780;
       font-size: 0.65rem;
@@ -176,23 +156,8 @@
       padding: 0.35rem;
       color: #4b5e77;
       border-top: 1px solid #141a24;
-      letter-spacing: 0.3px;
-    }
-
-    @media (max-width: 640px) {
-      .kairos-terminal {
-        height: 90vh;
-      }
-      .terminal-output {
-        font-size: 0.8rem;
-        padding: 0.8rem;
-      }
-      .input-line {
-        padding: 0.6rem 1rem;
-      }
     }
   </style>
-  <!-- Supabase client library v2 -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
@@ -203,73 +168,46 @@
     </div>
     <div class="status-led">
       <span class="led"></span>
-      <span>supabase · bootstrapped</span>
+      <span>supabase · ready</span>
     </div>
   </div>
 
   <div id="terminal" class="terminal-output">
-    <!-- dynamic terminal lines will appear here -->
+    <!-- terminal output appears here -->
   </div>
 
   <div class="input-line">
     <span class="prompt-symbol">➜</span>
-    <input type="text" id="command" placeholder="enter command ... (help)" autofocus spellcheck="false" autocomplete="off">
+    <input type="text" id="command" placeholder="type 'help' and press Enter" autofocus spellcheck="false" autocomplete="off">
   </div>
   <div class="footer-hint">
-    KAIROS TERMINAL | MVP kernel | schema-aware | forgotten / random / query ready
+    KAIROS TERMINAL | commands: help, clear, schema, insert, query, random, forgotten
   </div>
 </div>
 
 <script>
   // ============================================================
-  // TERMINAL.JS (production kernel) – fully integrated
+  // KAIROS TERMINAL KERNEL - PRODUCTION NODE
   // ============================================================
   
-  // ------------- Supabase configuration (EDIT WITH YOUR CREDENTIALS) -------------
-  // Replace with your actual Supabase URL + anon key for production.
-  // For local demo / testing, these are placeholders – will trigger bootstrap warnings.
+  // !!! REPLACE WITH YOUR SUPABASE CREDENTIALS !!!
   const SUPABASE_URL = 'https://kzcucjcyxybypncbdbws.supabase.co';
-  const SUPABASE_ANON_KEY = 'https://kzcucjcyxybypncbdbws.supabase.co';
+  const SUPABASE_ANON_KEY = 'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw';
   
-  // Global kernel variables
   let supabase = null;
-  let currentUser = null;
-  
-  // Command registry
   const commands = {};
   
-  // Helper: print to terminal (safe text only)
+  // Terminal output function
   function printToTerminal(text) {
     const terminalDiv = document.getElementById('terminal');
     if (!terminalDiv) return;
     const line = document.createElement('div');
     line.textContent = String(text);
     terminalDiv.appendChild(line);
-    // auto-scroll to bottom
     terminalDiv.scrollTop = terminalDiv.scrollHeight;
   }
   
-  // Setup terminal event handlers
-  function setupTerminal() {
-    const commandInput = document.getElementById('command');
-    const terminalDiv = document.getElementById('terminal');
-    if (!commandInput) return;
-    
-    commandInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        const cmdLine = commandInput.value;
-        if (cmdLine.trim()) {
-          printToTerminal(`> ${cmdLine}`);
-          processCommand(cmdLine);
-        }
-        commandInput.value = '';
-        commandInput.focus();
-        if (terminalDiv) terminalDiv.scrollTop = terminalDiv.scrollHeight;
-      }
-    });
-  }
-  
-  // Command processor (async)
+  // Process commands
   async function processCommand(cmdLine) {
     const parts = cmdLine.trim().split(/\s+/);
     const cmd = parts[0].toLowerCase();
@@ -279,132 +217,44 @@
       try {
         const output = await commands[cmd](args);
         if (output !== undefined && output !== null) {
-          // ensure string output
           printToTerminal(String(output));
         }
       } catch (err) {
         printToTerminal(`Error: ${err.message}`);
       }
-    } else {
+    } else if (cmdLine.trim().length > 0) {
       printToTerminal(`Unknown command: "${cmd}". Type "help" for available commands.`);
     }
   }
   
-  // ---------- DATABASE BOOTSTRAP (auto-create missing tables) ----------
-  // Helper: generic exec_sql fallback – since RPC may not be enabled, we will
-  // create tables using supabase admin-like approach? But we rely on direct
-  // table creation: if missing, we show manual instructions but also attempt
-  // using simple create table via .rpc if available, else friendly warning.
-  // Production note: The directive expects creation via supabase.rpc('exec_sql')
-  // We'll attempt that but also provide a graceful fallback with user instructions.
-  
-  async function createTableIfMissing(tableName, createSQL) {
-    // first, check existence via try/catch
-    try {
-      const { error: checkError } = await supabase.from(tableName).select('id', { count: 'exact', head: true });
-      if (!checkError) return true; // table exists
-      if (checkError && checkError.message && 
-          (checkError.message.includes('relation') || checkError.message.includes('does not exist'))) {
-        // table missing -> attempt creation
-        printToTerminal(`⚠️ Bootstrapping: creating table "${tableName}"...`);
-        // try RPC method first (most robust if supabase custom function exec_sql exists)
-        try {
-          const { error: rpcError } = await supabase.rpc('exec_sql', { sql_query: createSQL });
-          if (!rpcError) {
-            printToTerminal(`✅ Table "${tableName}" created via RPC.`);
-            return true;
-          } else {
-            // fallback: print instructions but also attempt direct SQL via REST? not possible directly,
-            // but we can still try to call the supabase pg function or inform the user.
-            printToTerminal(`⚠️ Could not auto-create "${tableName}". Please run SQL in Supabase SQL editor:\n${createSQL}`);
-            return false;
-          }
-        } catch (rpcErr) {
-          printToTerminal(`⚠️ Auto-creation failed (RPC missing). Please run manually:\n${createSQL}`);
-          return false;
-        }
-      }
-      return false;
-    } catch (err) {
-      // table likely missing
-      printToTerminal(`⚠️ Bootstrapping "${tableName}" failed: ${err.message}. Manual SQL required.`);
-      return false;
-    }
-  }
-  
+  // Database bootstrap
   async function bootstrapDatabase() {
-    // entries table DDL
-    const entriesSQL = `
-      CREATE TABLE IF NOT EXISTS entries (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        label TEXT NOT NULL,
-        body TEXT,
-        created_at TIMESTAMP DEFAULT NOW()
-      );
-      CREATE INDEX IF NOT EXISTS idx_entries_label ON entries(label);
-    `;
-    // relationships table DDL
-    const relationshipsSQL = `
-      CREATE TABLE IF NOT EXISTS relationships (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        source_id UUID REFERENCES entries(id) ON DELETE CASCADE,
-        target_id UUID REFERENCES entries(id) ON DELETE CASCADE,
-        type TEXT,
-        created_at TIMESTAMP DEFAULT NOW()
-      );
-      CREATE INDEX IF NOT EXISTS idx_relationships_source ON relationships(source_id);
-      CREATE INDEX IF NOT EXISTS idx_relationships_target ON relationships(target_id);
-    `;
-    // motifs table DDL
-    const motifsSQL = `
-      CREATE TABLE IF NOT EXISTS motifs (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        name TEXT NOT NULL UNIQUE,
-        description TEXT,
-        created_at TIMESTAMP DEFAULT NOW()
-      );
-    `;
+    const tables = ['entries', 'relationships', 'motifs'];
     
-    await createTableIfMissing('entries', entriesSQL);
-    await createTableIfMissing('relationships', relationshipsSQL);
-    await createTableIfMissing('motifs', motifsSQL);
-    
-    // optional: seed tiny demo data only if entries table is empty (for smooth demo)
-    const { data: existingEntries, error: countError } = await supabase.from('entries').select('id', { count: 'exact', head: true });
-    if (!countError && existingEntries && existingEntries.length === 0) {
-      // seed minimal demo content so "random" and "forgotten" show something
-      const demoEntries = [
-        { label: "ashen_fragment", body: "The ember remembers the shape of the flame." },
-        { label: "echo_corridor", body: "Voices bounce between stone and memory." },
-        { label: "solitary_node", body: "An island without bridges." },
-        { label: "weaver", body: "Threads connect what was scattered." }
-      ];
-      const { error: insertError } = await supabase.from('entries').insert(demoEntries);
-      if (!insertError) {
-        printToTerminal("🌱 Seeded initial entries (demo context).");
-        // also add one relationship example: ashen_fragment -> echo_corridor
-        const { data: srcData } = await supabase.from('entries').select('id').eq('label', 'ashen_fragment').single();
-        const { data: tgtData } = await supabase.from('entries').select('id').eq('label', 'echo_corridor').single();
-        if (srcData && tgtData) {
-          await supabase.from('relationships').insert({ source_id: srcData.id, target_id: tgtData.id, type: "resonance" });
+    for (const table of tables) {
+      try {
+        const { error } = await supabase.from(table).select('count', { count: 'exact', head: true });
+        if (error && error.message && error.message.includes('does not exist')) {
+          printToTerminal(`⚠️ Table '${table}' missing. Please create it in Supabase SQL editor.`);
         }
+      } catch (err) {
+        // Table doesn't exist
+        printToTerminal(`⚠️ Table '${table}' not found. Run SQL creation script.`);
       }
     }
-    printToTerminal("✓ Database bootstrap routine complete.");
   }
   
-  // ---------- COMMAND HANDLERS ----------
+  // ========== COMMAND HANDLERS ==========
   
   commands.help = async () => {
     return `Available commands:
   help        - Show this help message
   clear       - Clear terminal output
-  schema      - List existing tables & columns (entries, relationships, motifs)
-  create <tr> <col1:type> <col2:type> ... - Create a new custom table
-  insert <table> <json> - Insert a row (e.g. insert entries {"label":"test","body":"hello"})
-  query <tr> <filter>  - Query table with optional filter (e.g. query entries label=ashen_fragment)
+  schema      - List existing tables and columns
+  insert <table> <json> - Insert a row (example: insert entries {"label":"test","body":"hello"})
+  query <td> <filter> - Query table (example: query entries label=test)
   random      - Return a random row from entries
-  forgotten   - Return entries with no outgoing relationships (orphan nodes)`;
+  forgotten   - Return entries with no relationships`;
   };
   
   commands.clear = async () => {
@@ -415,71 +265,35 @@
   
   commands.schema = async () => {
     const tables = ['entries', 'relationships', 'motifs'];
-    let output = '═══ KAIROS DATABASE SCHEMA ═══\n';
-    for (const tbl of tables) {
+    let output = 'Database Schema:\n';
+    
+    for (const table of tables) {
       try {
-        const { data, error } = await supabase.from(tbl).select('*').limit(1);
+        const { data, error } = await supabase.from(table).select('*').limit(1);
         if (error && error.message.includes('does not exist')) {
-          output += `\n❌ ${tbl}: table not found in schema.`;
-          continue;
-        }
-        if (!error) {
-          let columns = [];
-          if (data && data.length > 0) {
-            columns = Object.keys(data[0]);
-          } else {
-            // fallback to get table info via supabase introspection: use dummy query
-            const { data: columnInfo, error: colError } = await supabase.from(tbl).select('*').limit(0);
-            if (!colError && columnInfo && columnInfo.length === 0 && typeof columnInfo === 'object') {
-              // tricky: we can derive from empty but not perfect, but better show generic
-              columns = ['id', 'label', 'body', 'created_at']; // reasonable guess for entries
-              if (tbl === 'relationships') columns = ['id', 'source_id', 'target_id', 'type', 'created_at'];
-              if (tbl === 'motifs') columns = ['id', 'name', 'description', 'created_at'];
-            } else if (data && data.length === 0) {
-              if (tbl === 'entries') columns = ['id', 'label', 'body', 'created_at'];
-              else if (tbl === 'relationships') columns = ['id', 'source_id', 'target_id', 'type', 'created_at'];
-              else if (tbl === 'motifs') columns = ['id', 'name', 'description', 'created_at'];
-            }
-          }
-          output += `\n📁 ${tbl} (${columns.length} columns)\n   → ${columns.join(', ')}`;
+          output += `\n❌ ${table}: not found`;
+        } else if (data && data.length > 0) {
+          const columns = Object.keys(data[0]);
+          output += `\n📁 ${table}: ${columns.join(', ')}`;
         } else {
-          output += `\n⚠️ ${tbl}: ${error.message.substring(0, 70)}`;
+          output += `\n📁 ${table}: (empty table)`;
         }
       } catch (err) {
-        output += `\n⚠️ ${tbl}: error - ${err.message}`;
+        output += `\n❌ ${table}: error accessing`;
       }
     }
     return output;
   };
   
-  commands.create = async (args) => {
-    if (args.length < 2) return 'Usage: create <tr> <col1:type> <col2:type> ... (example: create archive title:text weight:int)';
-    const tableName = args[0];
-    const columnDefs = args.slice(1);
-    let sql = `CREATE TABLE IF NOT EXISTS ${tableName} (id UUID PRIMARY KEY DEFAULT gen_random_uuid()`;
-    for (const def of columnDefs) {
-      const [colName, colType] = def.split(':');
-      if (colName && colType) {
-        sql += `, ${colName} ${colType.toUpperCase()}`;
-      }
-    }
-    sql += `, created_at TIMESTAMP DEFAULT NOW());`;
-    try {
-      const { error } = await supabase.rpc('exec_sql', { sql_query: sql });
-      if (error) return `Creation error: ${error.message}. You may need to enable exec_sql or run SQL manually.`;
-      return `Table '${tableName}' created successfully.`;
-    } catch (e) {
-      return `Create failed: ${e.message}. For MVP, use Supabase dashboard to add tables if RPC missing.`;
-    }
-  };
-  
   commands.insert = async (args) => {
-    if (args.length < 2) return 'Usage: insert <td> <json>   (example: insert entries {"label":"oracle","body":"fragment"})';
+    if (args.length < 2) return 'Usage: insert </table> <json> (example: insert entries {"label":"test","body":"content"})';
+    
     const tableName = args[0];
-    let jsonStr = args.slice(1).join(' ');
+    const jsonStr = args.slice(1).join(' ');
+    
     try {
-      const parsed = JSON.parse(jsonStr);
-      const { error } = await supabase.from(tableName).insert(parsed);
+      const data = JSON.parse(jsonStr);
+      const { error } = await supabase.from(tableName).insert(data);
       if (error) throw error;
       return `✓ Inserted into '${tableName}'.`;
     } catch (err) {
@@ -488,77 +302,83 @@
   };
   
   commands.query = async (args) => {
-    if (args.length < 1) return 'Usage: query </table> <filter?>   e.g., query entries or query entries label=ashen_fragment';
+    if (args.length < 1) return 'Usage: query <tr> <filter> (example: query entries label=test)';
+    
     const tableName = args[0];
-    let filterKey = null, filterValue = null;
+    let query = supabase.from(tableName).select('*');
+    
     if (args.length >= 2 && args[1].includes('=')) {
-      const [key, val] = args[1].split('=');
-      filterKey = key;
-      filterValue = val;
+      const [key, value] = args[1].split('=');
+      query = query.eq(key, value);
     }
-    let queryBuilder = supabase.from(tableName).select('*');
-    if (filterKey && filterValue) {
-      queryBuilder = queryBuilder.eq(filterKey, filterValue);
-    }
-    const { data, error } = await queryBuilder;
+    
+    const { data, error } = await query;
     if (error) return `Query error: ${error.message}`;
-    if (!data || data.length === 0) return `No results in '${tableName}'.`;
+    if (!data || data.length === 0) return 'No results found.';
+    
     return data.map(row => JSON.stringify(row, null, 2)).join('\n');
   };
   
   commands.random = async () => {
     const { data, error } = await supabase.from('entries').select('*');
-    if (error) return `Random error: ${error.message}`;
-    if (!data || data.length === 0) return 'No entries found in table "entries". Seed data may be missing.';
-    const rand = data[Math.floor(Math.random() * data.length)];
-    return `🎲 RANDOM ENTRY\n${JSON.stringify(rand, null, 2)}`;
+    if (error) return `Error: ${error.message}`;
+    if (!data || data.length === 0) return 'No entries found. Insert some data first.';
+    
+    const random = data[Math.floor(Math.random() * data.length)];
+    return `Random Entry:\n${JSON.stringify(random, null, 2)}`;
   };
   
   commands.forgotten = async () => {
-    // find entries that are NOT source of any relationship (orphans)
     try {
-      const { data: allEntries, error: entriesErr } = await supabase.from('entries').select('id, label, body');
-      if (entriesErr) return `Forgotten error: ${entriesErr.message}`;
-      if (!allEntries || allEntries.length === 0) return 'No entries exist.';
+      const { data: entries, error: entriesError } = await supabase.from('entries').select('id, label, body');
+      if (entriesError) return `Error: ${entriesError.message}`;
+      if (!entries || entries.length === 0) return 'No entries found.';
       
-      const { data: relations, error: relErr } = await supabase.from('relationships').select('source_id');
-      if (relErr && !relErr.message.includes('does not exist')) {
-        return `Error fetching relationships: ${relErr.message}`;
+      const { data: relations, error: relError } = await supabase.from('relationships').select('source_id');
+      if (relError && !relError.message.includes('does not exist')) {
+        return `Error checking relationships: ${relError.message}`;
       }
+      
       const usedIds = new Set((relations || []).map(r => r.source_id));
-      const forgottenEntries = allEntries.filter(entry => !usedIds.has(entry.id));
-      if (forgottenEntries.length === 0) return '✨ No forgotten entries — all have relationships.';
-      let out = `🌑 FORGOTTEN NODES (${forgottenEntries.length} orphan entries):\n`;
-      forgottenEntries.forEach(e => {
-        out += `- ${e.label} : ${e.body ? e.body.substring(0, 60) : '—'}\n`;
-      });
-      return out;
+      const forgotten = entries.filter(e => !usedIds.has(e.id));
+      
+      if (forgotten.length === 0) return 'No forgotten entries found. All entries have relationships.';
+      return `Forgotten Entries (${forgotten.length}):\n${forgotten.map(e => `- ${e.label}: ${e.body || 'no body'}`).join('\n')}`;
     } catch (err) {
-      return `Forgotten command failed: ${err.message}`;
+      return `Error: ${err.message}`;
     }
   };
   
-  // ---------- INITIALIZATION ----------
-  (async function initKernel() {
-    try {
-      if (!window.supabase) {
-        printToTerminal("CRITICAL: Supabase client not loaded. Check network.");
-        return;
-      }
-      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      printToTerminal("⟁ KAIROS TERMINAL KERNEL v1.0 — connecting to Supabase");
-      await bootstrapDatabase();
-      setupTerminal();
-      printToTerminal("Ready. Type 'help' to begin.");
-    } catch (bootError) {
-      printToTerminal(`FATAL: ${bootError.message}. Verify Supabase URL and anon key.`);
-      console.error(bootError);
-      // still allow terminal commands that might not require db? but we set minimal fallback
-      setupTerminal(); // allow help/clear at least
-      printToTerminal("⚠️ Running with limited capabilities: database commands may fail.");
+  // ========== INITIALIZATION ==========
+  (async function init() {
+    // Check if Supabase loaded
+    if (!window.supabase) {
+      printToTerminal("ERROR: Supabase client failed to load. Check internet connection.");
+      return;
     }
-    const inputElem = document.getElementById('command');
-    if (inputElem) inputElem.focus();
+    
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    printToTerminal("Kairos Terminal v1.0 - Connected to Supabase");
+    
+    await bootstrapDatabase();
+    printToTerminal('Type "help" for available commands.\n');
+    
+    // Set up input handler
+    const commandInput = document.getElementById('command');
+    if (commandInput) {
+      commandInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+          const cmdLine = commandInput.value;
+          if (cmdLine.trim()) {
+            printToTerminal(`> ${cmdLine}`);
+            processCommand(cmdLine);
+          }
+          commandInput.value = '';
+          e.preventDefault();
+        }
+      });
+      commandInput.focus();
+    }
   })();
 </script>
 </body>
