@@ -2,8 +2,8 @@
 // Production Node #1 - DeepSeek
 
 // Supabase configuration (replace with your actual project values)
-const SUPABASE_URL = 'https://your-project.supabase.co';
-const SUPABASE_ANON_KEY = 'your-anon-key';
+const SUPABASE_URL = 'https://kzcucjcyxybypncbdbws.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw';
 
 // Global state
 let supabase = null;
