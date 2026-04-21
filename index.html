@@ -151,191 +151,219 @@
 </div>
 
 <script>
-  // ============================================================
-  // KAIROS TERMINAL KERNEL
-  // ============================================================
-  
-  // !!! REPLACE WITH YOUR SUPABASE CREDENTIALS !!!
-  const SUPABASE_URL = 'https://kzcucjcyxybypncbdbws.supabase.co';
-  const SUPABASE_ANON_KEY = 'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw';
-  
-  let supabase = null;
-  const commands = {};
-  
-  function printToTerminal(text) {
-    const terminalDiv = document.getElementById('terminal');
-    if (!terminalDiv) return;
-    const line = document.createElement('div');
-    line.textContent = String(text);
-    terminalDiv.appendChild(line);
-    terminalDiv.scrollTop = terminalDiv.scrollHeight;
+const SUPABASE_URL = 'https://kzcucjcyxybypncbdbws.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw';
+
+let supabase = null;
+const commands = {};
+let commandHistory = [];
+let historyIndex = -1;
+
+// ===============================
+// OUTPUT SYSTEM (Typing effect)
+// ===============================
+async function typeLine(text, speed = 8) {
+  const terminal = document.getElementById('terminal');
+  const line = document.createElement('div');
+  terminal.appendChild(line);
+
+  for (let i = 0; i < text.length; i++) {
+    line.textContent += text[i];
+    await new Promise(r => setTimeout(r, speed));
   }
-  
-  async function processCommand(cmdLine) {
-    const trimmed = cmdLine.trim();
-    if (trimmed === '') return;
-    
-    const parts = trimmed.split(/\s+/);
-    const cmd = parts[0].toLowerCase();
-    const args = parts.slice(1);
-    
-    if (commands[cmd]) {
-      try {
-        const output = await commands[cmd](args);
-        if (output !== undefined && output !== null) {
-          printToTerminal(String(output));
-        }
-      } catch (err) {
-        printToTerminal(`Error: ${err.message}`);
-      }
-    } else {
-      printToTerminal(`Unknown command: "${cmd}". Type "help" for available commands.`);
+
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
+function printLine(text) {
+  const terminal = document.getElementById('terminal');
+  const line = document.createElement('div');
+  line.textContent = text;
+  terminal.appendChild(line);
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
+// ===============================
+// PARSER (Aion-lite)
+// ===============================
+function parseCommand(input) {
+  const cmd = input.split(' ')[0];
+  const rest = input.slice(cmd.length).trim();
+  return { cmd: cmd.toLowerCase(), rest };
+}
+
+// ===============================
+// PROCESS COMMAND
+// ===============================
+async function processCommand(input) {
+  if (!input.trim()) return;
+
+  const { cmd, rest } = parseCommand(input);
+
+  if (!commands[cmd]) {
+    return typeLine(`Unknown command: ${cmd}`);
+  }
+
+  try {
+    const result = await commands[cmd](rest);
+    if (result) await typeLine(result);
+  } catch (err) {
+    await typeLine(`Error: ${err.message}`);
+  }
+}
+
+// ===============================
+// COMMANDS
+// ===============================
+commands.help = async () => {
+  return `Commands:
+help
+clear
+schema
+insert <table> <json>
+query <table> key=value key=value
+random
+forgotten
+weave <id>`;
+};
+
+commands.clear = async () => {
+  document.getElementById('terminal').innerHTML = '';
+};
+
+commands.insert = async (rest) => {
+  const firstSpace = rest.indexOf(' ');
+  if (firstSpace === -1) return 'Usage: insert <table> <json>';
+
+  const table = rest.slice(0, firstSpace);
+  const jsonStr = rest.slice(firstSpace + 1);
+
+  let data;
+  try {
+    data = JSON.parse(jsonStr);
+  } catch {
+    return 'Invalid JSON';
+  }
+
+  // AION VALIDATION LAYER
+  if (!data.label || !data.body) {
+    return 'Insert requires: label + body';
+  }
+
+  const { error } = await supabase.from(table).insert(data);
+  if (error) return error.message;
+
+  return `✓ inserted into ${table}`;
+};
+
+commands.query = async (rest) => {
+  const parts = rest.split(' ');
+  const table = parts[0];
+  let query = supabase.from(table).select('*');
+
+  for (let i = 1; i < parts.length; i++) {
+    if (parts[i].includes('=')) {
+      const [k, v] = parts[i].split('=');
+      query = query.eq(k, v);
     }
   }
-  
-  // Command Handlers
-  commands.help = async () => {
-    return `Available commands:
-  help        - Show this help message
-  clear       - Clear terminal output
-  schema      - List existing tables
-  insert <tr> <json> - Insert row (e.g., insert entries {"label":"test","body":"hello"})
-  query <tr> <filter> - Query table (e.g., query entries label=test)
-  random      - Return random entry
-  forgotten   - Show entries with no relationships`;
-  };
-  
-  commands.clear = async () => {
-    const terminalDiv = document.getElementById('terminal');
-    if (terminalDiv) terminalDiv.innerHTML = '';
-    return null;
-  };
-  
-  commands.schema = async () => {
-    const tables = ['entries', 'relationships', 'motifs'];
-    let output = 'Database Schema:\n';
-    
-    for (const table of tables) {
-      try {
-        const { data, error } = await supabase.from(table).select('*').limit(1);
-        if (error && error.message.includes('does not exist')) {
-          output += `\n❌ ${table}: not found`;
-        } else if (data && data.length > 0) {
-          output += `\n✓ ${table}: ${Object.keys(data[0]).join(', ')}`;
-        } else {
-          output += `\n✓ ${table}: (empty)`;
-        }
-      } catch (err) {
-        output += `\n❌ ${table}: error`;
+
+  const { data, error } = await query;
+  if (error) return error.message;
+  if (!data.length) return 'No results';
+
+  return data.map(d => JSON.stringify(d)).join('\n');
+};
+
+commands.random = async () => {
+  const { data } = await supabase.from('entries').select('*');
+  if (!data.length) return 'No entries';
+
+  const r = data[Math.floor(Math.random() * data.length)];
+  return JSON.stringify(r, null, 2);
+};
+
+commands.forgotten = async () => {
+  const { data: entries } = await supabase.from('entries').select('id,label');
+  const { data: rel } = await supabase.from('relationships').select('source_id');
+
+  const used = new Set(rel.map(r => r.source_id));
+  const lost = entries.filter(e => !used.has(e.id));
+
+  return lost.map(e => `- ${e.label}`).join('\n') || 'None';
+};
+
+// ===============================
+// NEW: WEAVE (graph traversal)
+// ===============================
+commands.weave = async (rest) => {
+  if (!rest) return 'Usage: weave <id>';
+
+  const { data: rel } = await supabase
+    .from('relationships')
+    .select('*')
+    .eq('source_id', rest);
+
+  if (!rel.length) return 'No connections';
+
+  const ids = rel.map(r => r.target_id);
+
+  const { data: entries } = await supabase
+    .from('entries')
+    .select('*')
+    .in('id', ids);
+
+  return entries.map(e => `→ ${e.label}`).join('\n');
+};
+
+// ===============================
+// INIT
+// ===============================
+window.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('command');
+
+  supabase = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+  );
+
+  printLine('Kairos Terminal v1.1');
+  printLine('RLS Secure · Aion Layer Active\n');
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const val = input.value;
+
+      if (val.trim()) {
+        printLine(`> ${val}`);
+        processCommand(val);
+
+        commandHistory.push(val);
+        historyIndex = commandHistory.length;
+      }
+
+      input.value = '';
+    }
+
+    if (e.key === 'ArrowUp') {
+      if (historyIndex > 0) {
+        historyIndex--;
+        input.value = commandHistory[historyIndex];
       }
     }
-    return output;
-  };
-  
-  commands.insert = async (args) => {
-    if (args.length < 2) return 'Usage: insert <table> <json>';
-    
-    const tableName = args[0];
-    const jsonStr = args.slice(1).join(' ');
-    
-    try {
-      const data = JSON.parse(jsonStr);
-      const { error } = await supabase.from(tableName).insert(data);
-      if (error) throw error;
-      return `✓ Inserted into '${tableName}'`;
-    } catch (err) {
-      return `Insert error: ${err.message}`;
-    }
-  };
-  
-  commands.query = async (args) => {
-    if (args.length < 1) return 'Usage: query </table> <filter>';
-    
-    const tableName = args[0];
-    let query = supabase.from(tableName).select('*');
-    
-    if (args.length >= 2 && args[1].includes('=')) {
-      const [key, value] = args[1].split('=');
-      query = query.eq(key, value);
-    }
-    
-    const { data, error } = await query;
-    if (error) return `Query error: ${error.message}`;
-    if (!data || data.length === 0) return 'No results';
-    
-    return data.map(row => JSON.stringify(row, null, 2)).join('\n');
-  };
-  
-  commands.random = async () => {
-    const { data, error } = await supabase.from('entries').select('*');
-    if (error) return `Error: ${error.message}`;
-    if (!data || data.length === 0) return 'No entries found';
-    
-    const random = data[Math.floor(Math.random() * data.length)];
-    return `Random Entry:\n${JSON.stringify(random, null, 2)}`;
-  };
-  
-  commands.forgotten = async () => {
-    try {
-      const { data: entries, error: entriesError } = await supabase.from('entries').select('id, label, body');
-      if (entriesError) return `Error: ${entriesError.message}`;
-      if (!entries || entries.length === 0) return 'No entries found';
-      
-      const { data: relations, error: relError } = await supabase.from('relationships').select('source_id');
-      if (relError && !relError.message.includes('does not exist')) {
-        return `Error: ${relError.message}`;
+
+    if (e.key === 'ArrowDown') {
+      if (historyIndex < commandHistory.length - 1) {
+        historyIndex++;
+        input.value = commandHistory[historyIndex];
+      } else {
+        input.value = '';
       }
-      
-      const usedIds = new Set((relations || []).map(r => r.source_id));
-      const forgotten = entries.filter(e => !usedIds.has(e.id));
-      
-      if (forgotten.length === 0) return 'No forgotten entries';
-      return `Forgotten (${forgotten.length}):\n${forgotten.map(e => `- ${e.label}`).join('\n')}`;
-    } catch (err) {
-      return `Error: ${err.message}`;
     }
-  };
-  
-  // Initialize - DIRECT event binding
-  window.addEventListener('DOMContentLoaded', async () => {
-    const terminalDiv = document.getElementById('terminal');
-    const commandInput = document.getElementById('command');
-    
-    if (!commandInput) {
-      printToTerminal('ERROR: Could not find command input');
-      return;
-    }
-    
-    // Clear default text
-    if (terminalDiv) {
-      terminalDiv.innerHTML = '';
-    }
-    
-    // Initialize Supabase
-    if (!window.supabase) {
-      printToTerminal('ERROR: Supabase client not loaded');
-      return;
-    }
-    
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    printToTerminal('Kairos Terminal v1.0 - Connected');
-    printToTerminal('Type "help" to begin\n');
-    
-    // DIRECT keypress handler - most reliable method
-    commandInput.onkeypress = function(e) {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const cmdLine = this.value;
-        if (cmdLine.trim()) {
-          printToTerminal(`> ${cmdLine}`);
-          processCommand(cmdLine);
-        }
-        this.value = '';
-      }
-    };
-    
-    commandInput.focus();
   });
+
+  input.focus();
+});
 </script>
 </body>
 </html>
