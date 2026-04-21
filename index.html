@@ -322,7 +322,7 @@ commands.weave = async (rest) => {
 window.addEventListener('DOMContentLoaded', () => {
   const input = document.getElementById('command');
 
-  db = window.supabase.createClient(
+  supabase = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_ANON_KEY
   );
