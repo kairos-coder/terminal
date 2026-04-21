@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kairos Terminal · MVP Kernel</title>
+  <title>Kairos Terminal · Hare-Heart Hoard · v2.1</title>
   <style>
     * {
       margin: 0;
@@ -135,7 +135,7 @@
 <div class="kairos-terminal">
   <div class="terminal-header">
     <div class="node-badge">
-      <span>⚡ KERNEL NODE #1</span> <strong>· DEEPSEEK</strong>
+      <span>⚡ KERNEL NODE #1</span> <strong>· HARE-HEART HOARD v2.1</strong>
     </div>
     <div class="status-led">
       <span class="led"></span>
@@ -144,15 +144,15 @@
   </div>
 
   <div id="terminal" class="terminal-output">
-    <div>Kairos Terminal v1.0 - Initializing...</div>
+    <div>Kairos Terminal v2.1 - Full CRUD Operations</div>
   </div>
 
   <div class="input-line">
     <span class="prompt-symbol">➜</span>
-    <input type="text" id="command" placeholder="type 'help' and press Enter" autofocus spellcheck="false" autocomplete="off">
+    <input type="text" id="command" placeholder="type 'help' for commands | delete, update, insert, list" autofocus spellcheck="false" autocomplete="off">
   </div>
   <div class="footer-hint">
-    commands: help, clear, schema, list, insert, query, random, forgotten, weave | ↑ history
+    📜 commands: help, list [page], count, search, insert, update, delete, delete_range, delete_all, query, random, forgotten, weave, stats | ↑ history
   </div>
 </div>
 
@@ -205,21 +205,36 @@ async function processCommand(input) {
 }
 
 // ===============================
-// COMMAND HANDLERS (Using terminal_ tables)
+// COMMAND HANDLERS (v2.1 with CRUD)
 // ===============================
 
 commands.help = async () => {
   return `Available Commands:
-  help        - Show this help message
-  clear       - Clear terminal output
-  schema      - Show table structure
-  list        - List all terminal_entries
-  insert <json> - Insert entry (example: insert {"label":"test","body":"hello"})
-  query [filter] - Query entries (example: query label=ashen_fragment)
-  random      - Get random entry
-  forgotten   - Show entries with no relationships
-  weave <label> - Show connections from an entry label
-  stats       - Show database statistics`;
+  
+  📖 READ:
+    help        - Show this help
+    list [page] - List entries (20 per page)
+    count       - Show total number of entries
+    search <text> - Search by label or body
+    query [filter] - Query entries (e.g., query label=name)
+    random      - Get random entry
+    forgotten   - Show entries with no relationships
+    weave <label> - Show connections
+    stats       - Database statistics
+  
+  ✍️ WRITE:
+    insert <json> - Add entry (e.g., insert {"label":"name","body":"text"})
+    update <label> <json> - Update entry (e.g., update oldname {"label":"newname","body":"new text"})
+  
+  🗑️ DELETE:
+    delete <label> - Delete by label
+    delete id:<uuid> - Delete by ID
+    delete_range <start> <end> - Delete range from list view
+    delete_all --yes - DELETE EVERYTHING (requires confirmation)
+  
+  🧹 UTILITIES:
+    clear       - Clear terminal output
+    schema      - Show table structure`;
 };
 
 commands.clear = async () => {
@@ -230,7 +245,6 @@ commands.clear = async () => {
 commands.schema = async () => {
   let output = 'Terminal Database Schema:\n\n';
   
-  // Check terminal_entries
   try {
     const { data, error } = await db.from('terminal_entries').select('*').limit(1);
     if (error) throw error;
@@ -243,7 +257,6 @@ commands.schema = async () => {
     output += `❌ terminal_entries: ${err.message}\n`;
   }
   
-  // Check terminal_relationships
   try {
     const { data, error } = await db.from('terminal_relationships').select('*').limit(1);
     if (error) throw error;
@@ -256,31 +269,92 @@ commands.schema = async () => {
     output += `❌ terminal_relationships: ${err.message}\n`;
   }
   
-  // Check terminal_motifs
-  try {
-    const { data, error } = await db.from('terminal_motifs').select('*').limit(1);
-    if (error) throw error;
-    if (data && data.length > 0) {
-      output += `✓ terminal_motifs: ${Object.keys(data[0]).join(', ')}\n`;
-    } else {
-      output += `✓ terminal_motifs: (empty table)\n`;
-    }
-  } catch (err) {
-    output += `❌ terminal_motifs: ${err.message}\n`;
+  return output;
+};
+
+commands.count = async () => {
+  const { count, error } = await db
+    .from('terminal_entries')
+    .select('*', { count: 'exact', head: true });
+  
+  if (error) return `Error: ${error.message}`;
+  
+  const { count: relCount } = await db
+    .from('terminal_relationships')
+    .select('*', { count: 'exact', head: true });
+  
+  return `📊 Database Summary:
+  Terminal Entries: ${count}
+  Terminal Relationships: ${relCount || 0}
+  
+💡 Use "list 1" to browse entries (20 per page)`;
+};
+
+commands.search = async (args) => {
+  const searchTerm = args.join(' ');
+  if (!searchTerm) return 'Usage: search <text>';
+  
+  const { data, error } = await db
+    .from('terminal_entries')
+    .select('*')
+    .or(`label.ilike.%${searchTerm}%,body.ilike.%${searchTerm}%`)
+    .limit(50);
+  
+  if (error) return `Error: ${error.message}`;
+  if (!data || data.length === 0) return `No matches found for "${searchTerm}"`;
+  
+  let output = `🔍 Found ${data.length} matches for "${searchTerm}":\n\n`;
+  data.forEach(entry => {
+    output += `📝 ${entry.label}\n   ${entry.body?.substring(0, 80) || 'no body'}\n\n`;
+  });
+  
+  if (data.length === 50) {
+    output += `\n💡 Showing first 50 matches. Try a more specific search.`;
   }
   
   return output;
 };
 
-commands.list = async () => {
-  const { data, error } = await db.from('terminal_entries').select('*').order('created_at', { ascending: false });
-  if (error) return `Error: ${error.message}`;
-  if (!data || data.length === 0) return 'No entries found in terminal_entries';
+commands.list = async (args) => {
+  let page = 1;
+  let limit = 20;
   
-  let output = `Found ${data.length} entries:\n\n`;
-  data.forEach(entry => {
-    output += `📝 ${entry.label}\n   ID: ${entry.id}\n   Body: ${entry.body?.substring(0, 80) || 'no body'}${entry.body?.length > 80 ? '...' : ''}\n   Created: ${entry.created_at}\n\n`;
+  if (args.length > 0 && !isNaN(parseInt(args[0]))) {
+    page = parseInt(args[0]);
+  }
+  
+  const offset = (page - 1) * limit;
+  
+  const { count, error: countError } = await db
+    .from('terminal_entries')
+    .select('*', { count: 'exact', head: true });
+  
+  if (countError) return `Error: ${countError.message}`;
+  if (count === 0) return 'No entries found.';
+  
+  const totalPages = Math.ceil(count / limit);
+  
+  if (page > totalPages) {
+    return `Page ${page} doesn't exist. Total pages: ${totalPages}. Use "list 1" to start.`;
+  }
+  
+  const { data, error } = await db
+    .from('terminal_entries')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+  
+  if (error) return `Error: ${error.message}`;
+  
+  let output = `📋 Page ${page}/${totalPages} (${count} total entries):\n\n`;
+  
+  data.forEach((entry, idx) => {
+    const num = offset + idx + 1;
+    const bodyPreview = entry.body?.substring(0, 50) || '—';
+    output += `${num}. ${entry.label}\n   ${bodyPreview}${entry.body?.length > 50 ? '...' : ''}\n`;
   });
+  
+  output += `\n💡 Commands: "list ${page + 1}" (next), "delete_range ${offset + 1} ${offset + limit}" (delete this page), "search <term>" (find)`;
   return output;
 };
 
@@ -301,16 +375,115 @@ commands.insert = async (args) => {
   }
 };
 
+commands.update = async (args) => {
+  if (args.length < 2) return 'Usage: update <current_label> {"label":"new_label","body":"new body"}';
+  
+  const currentLabel = args[0];
+  const jsonStr = args.slice(1).join(' ');
+  
+  try {
+    const updates = JSON.parse(jsonStr);
+    
+    // Build update object
+    const updateData = {};
+    if (updates.label) updateData.label = updates.label;
+    if (updates.body) updateData.body = updates.body;
+    
+    if (Object.keys(updateData).length === 0) return 'No valid fields to update (label or body)';
+    
+    const { error, count } = await db
+      .from('terminal_entries')
+      .update(updateData)
+      .eq('label', currentLabel);
+    
+    if (error) throw error;
+    if (count === 0) return `No entry found with label: ${currentLabel}`;
+    
+    return `✓ Updated entry: ${currentLabel} → ${updates.label || currentLabel}`;
+  } catch (err) {
+    return `Update error: ${err.message}\nExample: update oldlabel {"label":"newlabel","body":"new content"}`;
+  }
+};
+
+commands.delete = async (args) => {
+  if (args.length === 0) return 'Usage: delete <label> or delete id:<uuid>';
+  
+  const deleteTarget = args[0];
+  
+  let query;
+  if (deleteTarget.startsWith('id:')) {
+    const id = deleteTarget.substring(3);
+    query = db.from('terminal_entries').delete().eq('id', id);
+  } else {
+    query = db.from('terminal_entries').delete().eq('label', deleteTarget);
+  }
+  
+  const { error, count } = await query;
+  
+  if (error) return `Delete error: ${error.message}`;
+  if (count === 0) return `No entry found with ${deleteTarget.startsWith('id:') ? 'ID' : 'label'}: ${deleteTarget}`;
+  
+  return `✓ Deleted ${count} entry(s) with ${deleteTarget.startsWith('id:') ? 'ID' : 'label'}: ${deleteTarget}`;
+};
+
+commands.delete_range = async (args) => {
+  if (args.length < 2) return 'Usage: delete_range <start_number> <end_number> (from list command)';
+  
+  const start = parseInt(args[0]);
+  const end = parseInt(args[1]);
+  
+  if (isNaN(start) || isNaN(end)) return 'Start and end must be numbers';
+  if (start > end) return 'Start must be less than or equal to end';
+  
+  const { data: entries, error: fetchError } = await db
+    .from('terminal_entries')
+    .select('id, label')
+    .order('created_at', { ascending: false });
+  
+  if (fetchError) return `Error: ${fetchError.message}`;
+  if (!entries || entries.length === 0) return 'No entries found';
+  
+  if (start < 1 || end > entries.length) {
+    return `Range ${start}-${end} is invalid. Valid range: 1-${entries.length}`;
+  }
+  
+  const toDelete = entries.slice(start - 1, end);
+  const idsToDelete = toDelete.map(e => e.id);
+  const labelsToDelete = toDelete.map(e => e.label);
+  
+  const { error, count } = await db
+    .from('terminal_entries')
+    .delete()
+    .in('id', idsToDelete);
+  
+  if (error) return `Error: ${error.message}`;
+  
+  return `✓ Deleted ${count} entries (rows ${start}-${end}):\n   ${labelsToDelete.join(', ')}`;
+};
+
+commands.delete_all = async (args) => {
+  const confirm = args[0];
+  if (confirm !== '--yes') {
+    return '⚠️ DANGER: This will delete ALL entries. Type "delete_all --yes" to confirm.';
+  }
+  
+  const { count, error } = await db
+    .from('terminal_entries')
+    .delete()
+    .neq('id', '00000000-0000-0000-0000-000000000000');
+  
+  if (error) return `Error: ${error.message}`;
+  return `✓ Deleted ${count} entries. The hoard is empty.`;
+};
+
 commands.query = async (args) => {
   if (args.length === 0) {
-    // No filter, return all
     const { data, error } = await db.from('terminal_entries').select('*').limit(20);
     if (error) return `Error: ${error.message}`;
     if (!data || data.length === 0) return 'No entries found';
     return data.map(row => `${row.label}: ${row.body?.substring(0, 60) || 'no body'}`).join('\n');
   }
   
-  // Parse filter (label=value)
   const filter = args[0];
   if (!filter.includes('=')) return 'Usage: query label=value';
   
@@ -350,9 +523,10 @@ commands.forgotten = async () => {
     if (forgotten.length === 0) return 'No forgotten entries found. All entries have relationships.';
     
     let output = `🌑 Forgotten Entries (${forgotten.length}):\n`;
-    forgotten.forEach(e => {
+    forgotten.slice(0, 20).forEach(e => {
       output += `  - ${e.label}: ${e.body ? e.body.substring(0, 50) : 'no body'}\n`;
     });
+    if (forgotten.length > 20) output += `\n  ... and ${forgotten.length - 20} more.`;
     return output;
   } catch (err) {
     return `Error: ${err.message}`;
@@ -365,7 +539,6 @@ commands.weave = async (args) => {
   const label = args[0];
   
   try {
-    // First find the entry
     const { data: entry, error: entryError } = await db
       .from('terminal_entries')
       .select('id, label')
@@ -374,7 +547,6 @@ commands.weave = async (args) => {
     
     if (entryError) return `Entry not found: ${label}`;
     
-    // Find relationships
     const { data: rel, error: relError } = await db
       .from('terminal_relationships')
       .select('target_id, type')
@@ -383,7 +555,6 @@ commands.weave = async (args) => {
     if (relError) return `Error: ${relError.message}`;
     if (!rel || rel.length === 0) return `No connections found for "${label}".`;
     
-    // Get connected entries
     const targetIds = rel.map(r => r.target_id);
     const { data: targets, error: targetsError } = await db
       .from('terminal_entries')
@@ -410,7 +581,7 @@ commands.stats = async () => {
   const { count: relCount, error: relError } = await db.from('terminal_relationships').select('*', { count: 'exact', head: true });
   if (relError && !relError.message.includes('does not exist')) return `Error: ${relError.message}`;
   
-  return `📊 Database Statistics:\n\nTerminal Entries: ${entryCount}\nTerminal Relationships: ${relCount || 0}\n\nType "list" to see all entries`;
+  return `📊 Database Statistics:\n\nTerminal Entries: ${entryCount}\nTerminal Relationships: ${relCount || 0}\n\n💡 Type "list 1" to browse entries.`;
 };
 
 // ===============================
@@ -426,11 +597,11 @@ window.addEventListener('DOMContentLoaded', () => {
   
   db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   
-  printLine('Kairos Terminal v1.0');
+  printLine('Kairos Terminal v2.1 - Full CRUD Operations');
   printLine('✓ Connected to Supabase');
-  printLine('✓ Using terminal_entries, terminal_relationships, terminal_motifs');
+  printLine('✓ Added: update, delete, delete_range, delete_all commands');
   printLine('');
-  printLine('Type "help" to see available commands\n');
+  printLine('Type "help" to see all commands\n');
   
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
