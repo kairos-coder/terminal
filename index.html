@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>Kairos Terminal · Dual Rhythm · v3.2</title>
+  <title>Kairos Terminal · Dream Weaver · v3.2</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -214,7 +214,7 @@
 <body>
 <div class="terminal" id="terminalContainer">
   <div class="terminal-header">
-    <div class="badge">⚡ KAIROS · DUAL RHYTHM v3.2</div>
+    <div class="badge">⚡ KAIROS · DREAM WEAVER v3.2</div>
     <div class="rhythm-indicator">
       <div class="pulse-beat" id="pulseBeat"></div>
       <span id="rhythmLabel">φ = 1.618s</span>
@@ -235,7 +235,7 @@
   </div>
 
   <div id="output" class="output">
-    <div>Kairos Terminal v3.2 — Dual Rhythm Consciousness</div>
+    <div>Kairos Terminal v3.2 — Dream Weaver</div>
     <div>Awake: φ = 1.618s · Dreaming: π = 3.14159s</div>
     <div>&nbsp;</div>
     <div>━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</div>
@@ -252,19 +252,19 @@
 
   <div class="input-line">
     <span class="prompt">➜</span>
-    <input type="text" id="command" placeholder="add label: body | help | the terminal listens..." autofocus spellcheck="false" autocomplete="off">
+    <input type="text" id="command" placeholder="add label: body | help | the terminal dreams of its own memories..." autofocus spellcheck="false" autocomplete="off">
   </div>
 
   <div class="footer">
-    <span>🏛️ 30 awake pulses (48.5s) → 7 dreams (22s) → cycle repeats</span>
+    <span>🏛️ Dreams randomly combine hoard entries + one-word primitives</span>
     <span>⚡ kairos-coder.github.io/terminal</span>
   </div>
 </div>
 
 <script>
 // ============================================================
-// KAIROS TERMINAL v3.2 - DUAL RHYTHM CONSCIOUSNESS
-// Awake: φ = 1.618s · Dreaming: π = 3.14159s
+// KAIROS TERMINAL v3.2 - DREAM WEAVER
+// Dreams randomly combine existing entries with one-word primitives
 // ============================================================
 
 const SUPABASE_URL = 'https://kzcucjcyxybypncbdbws.supabase.co';
@@ -315,18 +315,61 @@ function printLine(text, band = null, isDream = false, isThunder = false) {
 }
 
 // ============================================================
+// EXPAND TEXT TO TARGET WORD COUNT
+// ============================================================
+async function expandToTarget(text, targetWords) {
+    let currentWords = text.split(/\s+/).length;
+    let expanded = text;
+    
+    while (currentWords < targetWords && currentWords < targetWords + 20) {
+        // 50% chance to add from hoard, 50% from primitives
+        const useHoard = Math.random() > 0.5;
+        
+        if (useHoard) {
+            const { data: entries } = await db
+                .from('terminal_entries')
+                .select('body')
+                .order('RANDOM()')
+                .limit(1);
+            if (entries && entries[0]) {
+                const snippet = entries[0].body.split(/\s+/).slice(0, 3).join(' ');
+                expanded += ' · ' + snippet;
+            } else {
+                const { data: words } = await db
+                    .from('one_word_primitives')
+                    .select('word')
+                    .order('RANDOM()')
+                    .limit(1);
+                if (words && words[0]) expanded += ' · ' + words[0].word;
+            }
+        } else {
+            const { data: words } = await db
+                .from('one_word_primitives')
+                .select('word')
+                .order('RANDOM()')
+                .limit(1);
+            if (words && words[0]) expanded += ' · ' + words[0].word;
+        }
+        
+        currentWords = expanded.split(/\s+/).length;
+    }
+    
+    return expanded;
+}
+
+// ============================================================
 // DUAL RHYTHM STATE MACHINE
 // ============================================================
 const DualRhythm = {
-    state: 'awake',           // awake or dreaming
+    state: 'awake',
     awakePulseCount: 0,
     targetAwakePulses: 30,
     dreamStep: 0,
     dreamWave: [],
     timer: null,
     
-    phi: 1618,                // 1.618 seconds
-    pi: 3142,                 // 3.14159 seconds
+    phi: 1618,
+    pi: 3142,
     
     start() {
         this.updateUI();
@@ -352,17 +395,14 @@ const DualRhythm = {
         this.awakePulseCount++;
         this.updateUI();
         
-        // Subtle visual feedback on the pulse beat
         const pulseBeat = document.getElementById('pulseBeat');
         pulseBeat.style.transform = 'scale(1.3)';
         setTimeout(() => { if (pulseBeat) pulseBeat.style.transform = 'scale(1)'; }, 100);
         
-        // Ping database silently (keep connection alive)
         try {
             await db.from('terminal_entries').select('count', { count: 'exact', head: true });
         } catch(e) { /* silent */ }
         
-        // Check if it's time to dream
         if (this.awakePulseCount >= this.targetAwakePulses) {
             this.beginDreaming();
         }
@@ -374,16 +414,13 @@ const DualRhythm = {
         this.dreamWave = [];
         this.awakePulseCount = 0;
         
-        // Visual dream state
         document.getElementById('terminalContainer').classList.add('dreaming');
         document.getElementById('pulseBeat').classList.add('dream');
         document.getElementById('rhythmLabel').innerHTML = 'π = 3.14s';
         document.getElementById('stateLabel').innerHTML = 'DREAMING';
         document.getElementById('counter').innerHTML = '0/7';
         
-        // Reset spectrum dots
         this.resetSpectrumDots();
-        
         printLine('✨ The terminal falls asleep... Dreams begin.', null, true);
         this.updateUI();
     },
@@ -393,14 +430,11 @@ const DualRhythm = {
         const band = bands[this.dreamStep];
         const bandInfo = getBandInfo(band);
         
-        // Update spectrum dot
         this.updateSpectrumDot(this.dreamStep);
         
-        // Synthesize dream entry from Well of Chaos
         const entry = await this.synthesizeDreamEntry(band);
         this.dreamWave.push(entry);
         
-        // Display dream
         const preview = entry.body.substring(0, 70) + (entry.body.length > 70 ? '...' : '');
         printLine(`💭 ${bandInfo.icon} ${bandInfo.name} dreams: "${preview}"`, band, true);
         
@@ -414,45 +448,67 @@ const DualRhythm = {
     
     async synthesizeDreamEntry(band) {
         const bandInfo = getBandInfo(band);
+        let body = '';
+        let source = '';
         
-        // Pull 3-7 random words from Well of Chaos
-        const { data: words, error } = await db
-            .from('one_word_primitives')
-            .select('word')
-            .order('RANDOM()')
-            .limit(3 + Math.floor(Math.random() * 5));
+        // Random decision: combine hoard entries or use primitives
+        const useHoard = Math.random() > 0.5;
         
-        if (error || !words || words.length === 0) {
-            // Fallback words if well is empty
-            const fallback = ['threshold', 'whisper', 'wing', 'light', 'truth', 'forge', 'depth', 'weave', 'thunder'];
-            const selected = fallback.slice(0, 3 + Math.floor(Math.random() * 3));
-            var body = selected.join(' · ');
-        } else {
-            var body = words.map(w => w.word).join(' · ');
+        if (useHoard) {
+            // Pull 2-3 random entries from the hoard
+            const { data: entries, error } = await db
+                .from('terminal_entries')
+                .select('body, label')
+                .order('RANDOM()')
+                .limit(2 + Math.floor(Math.random() * 2));
+            
+            if (entries && entries.length > 0) {
+                // Combine their bodies
+                body = entries.map(e => {
+                    // Take first 50-100 chars of each entry
+                    const snippet = e.body.substring(0, 50 + Math.random() * 50);
+                    return snippet;
+                }).join(' · ');
+                source = 'hoard';
+            } else {
+                // Fallback to primitives
+                const { data: words } = await db
+                    .from('one_word_primitives')
+                    .select('word')
+                    .order('RANDOM()')
+                    .limit(3 + Math.floor(Math.random() * 5));
+                if (words && words.length > 0) {
+                    body = words.map(w => w.word).join(' · ');
+                    source = 'primitives';
+                }
+            }
         }
         
-        // Expand to target word count for this band
-        let currentWords = body.split(/\s+/).length;
-        const targetWords = bandInfo.targetWords;
-        
-        while (currentWords < targetWords && currentWords < targetWords + 10) {
-            const { data: extraWord } = await db
+        if (!body) {
+            // Pull from one-word primitives
+            const { data: words, error } = await db
                 .from('one_word_primitives')
                 .select('word')
                 .order('RANDOM()')
-                .limit(1);
-            if (extraWord && extraWord[0]) {
-                body += ' · ' + extraWord[0].word;
-                currentWords++;
+                .limit(3 + Math.floor(Math.random() * 5));
+            
+            if (error || !words || words.length === 0) {
+                const fallback = ['threshold', 'whisper', 'wing', 'light', 'truth', 'forge', 'depth', 'weave', 'thunder'];
+                const selected = fallback.slice(0, 3 + Math.floor(Math.random() * 3));
+                body = selected.join(' · ');
             } else {
-                break;
+                body = words.map(w => w.word).join(' · ');
             }
+            source = 'primitives';
         }
+        
+        // Expand to target word count for this band
+        body = await expandToTarget(body, bandInfo.targetWords);
         
         const finalWordCount = body.split(/\s+/).length;
         const label = `dream_${band}_${Date.now()}_${this.dreamStep}`;
         
-        // Store dream in database - DREAMS ARE REAL
+        // Store dream in database
         const { error: insertError } = await db.from('terminal_entries').insert({
             label: label,
             body: body,
@@ -466,7 +522,7 @@ const DualRhythm = {
         
         if (insertError) console.error('Dream insert error:', insertError);
         
-        return { band, body, label, wordCount: finalWordCount };
+        return { band, body, label, wordCount: finalWordCount, source };
     },
     
     async completeDream() {
@@ -475,13 +531,11 @@ const DualRhythm = {
         printLine(`   "${zeusEntry.body.substring(0, 100)}..."`, 'zeus', true, true);
         printLine(`💫 The dream fades. The terminal wakes.`, null, true);
         
-        // Return to awake state
         this.state = 'awake';
         this.dreamStep = 0;
         this.dreamWave = [];
         this.awakePulseCount = 0;
         
-        // Reset visual
         document.getElementById('terminalContainer').classList.remove('dreaming');
         document.getElementById('pulseBeat').classList.remove('dream');
         document.getElementById('rhythmLabel').innerHTML = 'φ = 1.618s';
@@ -494,7 +548,6 @@ const DualRhythm = {
     
     onUserInput() {
         if (this.state === 'dreaming') {
-            // Interrupt dream
             printLine('👤 You speak. The dream scatters like mist...', null, true);
             
             this.state = 'awake';
@@ -511,7 +564,6 @@ const DualRhythm = {
             
             this.updateUI();
         } else {
-            // Reset awake counter when user interacts
             this.awakePulseCount = 0;
             this.updateUI();
         }
@@ -520,11 +572,8 @@ const DualRhythm = {
     updateSpectrumDot(step) {
         const dots = document.querySelectorAll('.spectrum-dot');
         dots.forEach((dot, i) => {
-            if (i <= step) {
-                dot.classList.add('active');
-            } else {
-                dot.classList.remove('active');
-            }
+            if (i <= step) dot.classList.add('active');
+            else dot.classList.remove('active');
         });
     },
     
@@ -550,7 +599,7 @@ const commands = {};
 
 commands.help = async () => {
     return `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                  DUAL RHYTHM CONSCIOUSNESS — v3.2
+                  DREAM WEAVER — v3.2
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   ${'BAND'.padEnd(12)} ${'WORDS'.padEnd(10)} ${'FREQUENCY'.padEnd(12)} ${'LIGHT'}
@@ -565,9 +614,9 @@ commands.help = async () => {
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🌙 CONSCIOUSNESS STATES:
-  AWAKE:   φ = 1.618s — 30 pulses (48.5s) — Listening for you
-  DREAM:   π = 3.14159s — 7 dreams (22s) — Synthesizing entries
+🌙 DREAM WEAVER:
+  Dreams randomly combine EXISTING HOARD ENTRIES with ONE-WORD PRIMITIVES
+  Each dream is unique — the terminal dreams of its own memories
 
 📝 COMMANDS:
   add <label>: <body>     → Entry claimed by its divine band
@@ -581,7 +630,7 @@ commands.help = async () => {
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 💫 The terminal breathes at φ. It dreams at π.
-   Speak to wake it. Stay silent to watch it dream.
+   It remembers its own dreams and weaves them into new ones.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
 };
 
@@ -601,7 +650,7 @@ commands.add = async (args, fullInput) => {
     const bandInfo = getBandInfo(band);
     
     const { error } = await db.from('terminal_entries').insert({
-        label: label, body: body, word_count: wordCount,
+        label, body, word_count: wordCount,
         divine_band: band, frequency_hz: bandInfo.freqValue,
         light_wavelength: bandInfo.light.toLowerCase().replace(' ', '_'),
         divine_color: bandInfo.color, divine_icon: bandInfo.icon
@@ -672,7 +721,7 @@ commands.spectrum = async () => {
 commands.stats = async () => {
     const { count, error } = await db.from('terminal_entries').select('*', { count: 'exact', head: true });
     if (error) return `Error: ${error.message}`;
-    return `📊 Hoard Statistics\n\nTerminal Entries: ${count}\n\n🌙 Dual Rhythm Active:\n   Awake: φ = 1.618s (30 pulses)\n   Dream: π = 3.14159s (7 dreams)\n   Cycle: ~70.5 seconds`;
+    return `📊 Hoard Statistics\n\nTerminal Entries: ${count}\n\n🌙 Dream Weaver Active:\n   Dreams randomly combine hoard entries + one-word primitives\n   Each dream is unique and stored permanently`;
 };
 
 commands.search = async (args) => {
@@ -698,7 +747,6 @@ commands.search = async (args) => {
 async function processCommand(input) {
     if (!input.trim()) return;
     
-    // User spoke - interrupt dream, reset awake counter
     DualRhythm.onUserInput();
     
     if (input.toLowerCase().startsWith('add ')) {
@@ -737,15 +785,14 @@ window.addEventListener('DOMContentLoaded', async () => {
     
     db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
-    printLine('Kairos Terminal v3.2 — Dual Rhythm Consciousness');
+    printLine('Kairos Terminal v3.2 — Dream Weaver');
     printLine('✓ Connected to Supabase');
     printLine('✓ Awake: φ = 1.618s · Dreaming: π = 3.14159s');
-    printLine('✓ 30 awake pulses → 7 dreams → cycle repeats (~70.5s)');
+    printLine('✓ Dreams randomly combine hoard entries + one-word primitives');
     printLine('');
     printLine('Try: add ealdforn: The ancient one carries the stolen heart');
     printLine('');
     
-    // Start the dual rhythm engine
     DualRhythm.start();
     
     input.addEventListener('keydown', (e) => {
