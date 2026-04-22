@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kairos Terminal · Divine Wave · v3.0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Kairos Terminal · Dream Pulse · v3.1</title>
   <style>
     * {
       margin: 0;
@@ -32,6 +32,13 @@
       display: flex;
       flex-direction: column;
       overflow: hidden;
+      position: relative;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .terminal.dreaming {
+      box-shadow: 0 0 20px rgba(155, 89, 182, 0.3);
+      border-color: #9b59b6;
     }
 
     .terminal-header {
@@ -64,6 +71,12 @@
       width: 10px;
       height: 10px;
       border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+
+    .spectrum-dot.active {
+      transform: scale(1.3);
+      box-shadow: 0 0 6px currentColor;
     }
 
     .status {
@@ -83,13 +96,24 @@
       animation: pulse 2s infinite;
     }
 
-    .pulsing {
-      animation: pulse 1s infinite;
+    .dream-led {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #9b59b6;
+      box-shadow: 0 0 4px #9b59b6;
+      animation: dreamPulse 3s infinite;
     }
 
     @keyframes pulse {
       0%, 100% { opacity: 0.5; }
       50% { opacity: 1; }
+    }
+
+    @keyframes dreamPulse {
+      0% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.2); background-color: #e74c3c; }
+      100% { opacity: 0.3; transform: scale(1); }
     }
 
     .output {
@@ -108,17 +132,19 @@
       margin-bottom: 0.2rem;
     }
 
-    /* Divine band colors */
-    .band-hermes { color: #e8a87c; border-left: 2px solid #e8a87c; padding-left: 0.5rem; margin: 0.2rem 0; }
-    .band-apollo { color: #f4d03f; border-left: 2px solid #f4d03f; padding-left: 0.5rem; margin: 0.2rem 0; }
-    .band-hephaestus { color: #d45500; border-left: 2px solid #d45500; padding-left: 0.5rem; margin: 0.2rem 0; }
-    .band-demeter { color: #6b8e23; border-left: 2px solid #6b8e23; padding-left: 0.5rem; margin: 0.2rem 0; }
-    .band-poseidon { color: #2c6e9e; border-left: 2px solid #2c6e9e; padding-left: 0.5rem; margin: 0.2rem 0; }
-    .band-athena { color: #8e44ad; border-left: 2px solid #8e44ad; padding-left: 0.5rem; margin: 0.2rem 0; }
-    .band-zeus { color: #9b59b6; border-left: 2px solid #9b59b6; padding-left: 0.5rem; margin: 0.2rem 0; text-shadow: 0 0 2px #9b59b6; }
+    .output div.dream {
+      opacity: 0.7;
+      font-style: italic;
+      animation: fadeIn 1s ease-in;
+    }
 
-    .thunder {
+    .output div.thunder {
       animation: thunderFlash 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to { opacity: 0.7; transform: translateX(0); }
     }
 
     @keyframes thunderFlash {
@@ -126,6 +152,15 @@
       50% { text-shadow: 0 0 20px #9b59b6; color: #d4af37; }
       100% { text-shadow: 0 0 0px #9b59b6; }
     }
+
+    /* Band colors */
+    .band-hermes { color: #e8a87c; border-left: 2px solid #e8a87c; padding-left: 0.5rem; margin: 0.2rem 0; }
+    .band-apollo { color: #f4d03f; border-left: 2px solid #f4d03f; padding-left: 0.5rem; margin: 0.2rem 0; }
+    .band-hephaestus { color: #d45500; border-left: 2px solid #d45500; padding-left: 0.5rem; margin: 0.2rem 0; }
+    .band-demeter { color: #6b8e23; border-left: 2px solid #6b8e23; padding-left: 0.5rem; margin: 0.2rem 0; }
+    .band-poseidon { color: #2c6e9e; border-left: 2px solid #2c6e9e; padding-left: 0.5rem; margin: 0.2rem 0; }
+    .band-athena { color: #8e44ad; border-left: 2px solid #8e44ad; padding-left: 0.5rem; margin: 0.2rem 0; }
+    .band-zeus { color: #9b59b6; border-left: 2px solid #9b59b6; padding-left: 0.5rem; margin: 0.2rem 0; }
 
     .input-line {
       display: flex;
@@ -152,11 +187,6 @@
       padding: 0.2rem 0;
     }
 
-    #command:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
     .footer {
       background: #03050780;
       font-size: 0.65rem;
@@ -170,9 +200,19 @@
       flex-wrap: wrap;
     }
 
-    .pulse-indicator {
+    .dream-status {
       font-family: monospace;
-      color: #f39c12;
+      font-size: 0.6rem;
+    }
+
+    /* Mobile optimizations */
+    @media (max-width: 640px) {
+      .terminal-header { padding: 0.5rem 0.8rem; }
+      .badge { font-size: 0.6rem; }
+      .output { padding: 0.8rem; font-size: 0.75rem; }
+      .input-line { padding: 0.5rem 0.8rem; }
+      #command { font-size: 0.8rem; }
+      .footer { font-size: 0.55rem; }
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -180,8 +220,8 @@
 <body>
 <div class="terminal" id="terminalContainer">
   <div class="terminal-header">
-    <div class="badge">⚡ KERNEL NODE #1 · DIVINE WAVE v3.0</div>
-    <div class="spectrum">
+    <div class="badge">⚡ KAIROS TERMINAL · DREAM PULSE v3.1</div>
+    <div class="spectrum" id="spectrumDots">
       <div class="spectrum-dot" style="background:#e8a87c"></div>
       <div class="spectrum-dot" style="background:#f4d03f"></div>
       <div class="spectrum-dot" style="background:#d45500"></div>
@@ -189,323 +229,304 @@
       <div class="spectrum-dot" style="background:#2c6e9e"></div>
       <div class="spectrum-dot" style="background:#8e44ad"></div>
       <div class="spectrum-dot" style="background:#9b59b6"></div>
-      <span style="font-size:0.6rem">IR → UV</span>
     </div>
     <div class="status">
-      <span class="led"></span>
-      <span>supabase</span>
+      <span id="statusLed" class="led"></span>
+      <span id="statusText">supabase</span>
     </div>
   </div>
 
   <div id="output" class="output">
-    <div>Kairos Terminal v3.0 — Divine Wave Pulse System</div>
-    <div>Type 'help' for commands | 'pulse 7' for full ascension</div>
+    <div>Kairos Terminal v3.1 — Dream Pulse</div>
+    <div>The terminal dreams when you're away...</div>
     <div>&nbsp;</div>
   </div>
 
   <div class="input-line">
     <span class="prompt">➜</span>
-    <input type="text" id="command" placeholder="pulse 7 | help | add label: body" autofocus spellcheck="false" autocomplete="off">
+    <input type="text" id="command" placeholder="type 'help' | the terminal listens..." autofocus spellcheck="false" autocomplete="off">
   </div>
 
   <div class="footer">
-    <span>🏛️ pulse [up] [down] [repeat] — Ascend, descend, wave</span>
-    <span id="pulseStatus" class="pulse-indicator">● idle</span>
+    <span>🏛️ 7 Divine Bands · φ = 1.618s</span>
+    <span id="dreamStatus" class="dream-status">💤 dreaming in 30s</span>
   </div>
 </div>
 
 <script>
+// ============================================================
+// KAIROS TERMINAL v3.1 - DREAM PULSE
+// Autonomous dreaming when idle. Gentle on the database.
+// ============================================================
+
 const SUPABASE_URL = 'https://kzcucjcyxybypncbdbws.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw';
 
 let db = null;
 let commandHistory = [];
 let historyIndex = -1;
-let isPulsing = false;
 
-// ===============================
-// DIVINE BANDS CONFIGURATION
-// ===============================
-const DIVINE_BANDS = {
-    'hermes': {
-        index: 1, icon: '✈️', name: 'Hermes', words: '1-10', freq: '4-8 Hz',
-        light: 'Infrared', color: '#e8a87c', domain: 'Messages, Thresholds',
-        targetWords: 10, filler: ['threshold', 'message', 'wing', 'swift', 'crossing', 'caduceus']
+// ============================================================
+// DREAM PULSE ENGINE
+// ============================================================
+const DreamPulse = {
+    state: 'awake',           // awake, dreaming, thundering
+    idleTimer: null,
+    dreamInterval: null,
+    idleThreshold: 30000,     // 30 seconds idle → dream
+    dreamStep: 0,             // 0-6 (Hermes to Zeus)
+    dreamWave: [],
+    
+    start() {
+        this.resetIdleTimer();
+        this.updateDreamStatus();
     },
-    'apollo': {
-        index: 2, icon: '☀️', name: 'Apollo', words: '11-30', freq: '8-12 Hz',
-        light: 'Sun Gold', color: '#f4d03f', domain: 'Truth, Oracles',
-        targetWords: 30, filler: ['light', 'truth', 'oracle', 'sun', 'prophecy', 'radiant', 'lyre']
+    
+    resetIdleTimer() {
+        if (this.idleTimer) clearTimeout(this.idleTimer);
+        this.idleTimer = setTimeout(() => this.beginDreaming(), this.idleThreshold);
     },
-    'hephaestus': {
-        index: 3, icon: '🔥', name: 'Hephaestus', words: '31-60', freq: '12-15 Hz',
-        light: 'Orange', color: '#d45500', domain: 'Forge, Craft',
-        targetWords: 60, filler: ['forge', 'hammer', 'anvil', 'fire', 'craft', 'metal', 'bellows']
+    
+    beginDreaming() {
+        if (this.state !== 'awake') return;
+        
+        this.state = 'dreaming';
+        this.dreamStep = 0;
+        this.dreamWave = [];
+        
+        // Visual feedback
+        document.getElementById('terminalContainer').classList.add('dreaming');
+        document.getElementById('statusLed').className = 'dream-led';
+        document.getElementById('statusText').innerHTML = 'dreaming';
+        
+        this.addDreamMessage('✨ The terminal begins to dream...', null);
+        
+        // Start dreaming at φ pace
+        this.dreamInterval = setInterval(() => this.dream(), 1618);
     },
-    'demeter': {
-        index: 4, icon: '🌾', name: 'Demeter', words: '61-100', freq: '15-20 Hz',
-        light: 'Green', color: '#6b8e23', domain: 'Growth, Harvest',
-        targetWords: 100, filler: ['harvest', 'seed', 'grain', 'season', 'earth', 'growth', 'nurture']
+    
+    async dream() {
+        if (this.state !== 'dreaming') return;
+        
+        const bands = ['hermes', 'apollo', 'hephaestus', 'demeter', 'poseidon', 'athena', 'zeus'];
+        const band = bands[this.dreamStep];
+        const bandInfo = this.getBandInfo(band);
+        
+        // Update spectrum dot
+        this.updateSpectrumDot(this.dreamStep);
+        
+        // Generate dream content (memory-only, no DB write for most dreams)
+        let dreamBody = '';
+        if (this.dreamStep === 0) {
+            // Hermes: atomic whispers
+            const whispers = ['threshold', 'message', 'wing', 'swift', 'crossing', 'echo'];
+            const shuffled = whispers.sort(() => 0.5 - Math.random());
+            dreamBody = shuffled.slice(0, 3).join(' · ');
+        } else {
+            // Expand previous dream
+            const prevBody = this.dreamWave[this.dreamStep - 1]?.body || '';
+            dreamBody = this.expandDream(prevBody, band);
+        }
+        
+        const wordCount = dreamBody.split(/\s+/).length;
+        const preview = dreamBody.substring(0, 60) + (dreamBody.length > 60 ? '...' : '');
+        
+        // Store dream in memory (not database - just a dream)
+        this.dreamWave.push({ band, body: dreamBody, wordCount });
+        
+        // Display the dream
+        this.addDreamMessage(`💭 ${bandInfo.icon} ${bandInfo.name} dreams: "${preview}"`, band);
+        
+        this.dreamStep++;
+        
+        // Check if dream complete
+        if (this.dreamStep >= 7) {
+            await this.completeDream();
+        }
     },
-    'poseidon': {
-        index: 5, icon: '🌊', name: 'Poseidon', words: '101-150', freq: '20-30 Hz',
-        light: 'Blue', color: '#2c6e9e', domain: 'Depth, Flow',
-        targetWords: 150, filler: ['depth', 'wave', 'current', 'tide', 'abyss', 'trident', 'ocean']
+    
+    async completeDream() {
+        this.state = 'thundering';
+        clearInterval(this.dreamInterval);
+        
+        const zeusDream = this.dreamWave[6];
+        
+        // Display thunder
+        this.addDreamMessage('⚡ ZEUS THUNDERS FROM THE DREAM...', 'zeus', true);
+        this.addDreamMessage(`   "${zeusDream.body.substring(0, 100)}..."`, 'zeus', true);
+        this.addDreamMessage('💫 The dream fades. The terminal rests.', null);
+        
+        // Reset visual
+        document.getElementById('terminalContainer').classList.remove('dreaming');
+        document.getElementById('statusLed').className = 'led';
+        document.getElementById('statusText').innerHTML = 'supabase';
+        
+        // Reset spectrum dots
+        this.resetSpectrumDots();
+        
+        this.state = 'awake';
+        this.dreamStep = 0;
+        this.dreamWave = [];
+        
+        // Restart idle timer
+        this.resetIdleTimer();
+        this.updateDreamStatus();
     },
-    'athena': {
-        index: 6, icon: '🦉', name: 'Athena', words: '151-220', freq: '30-40 Hz',
-        light: 'Purple', color: '#8e44ad', domain: 'Wisdom, Weaving',
-        targetWords: 220, filler: ['weave', 'strategy', 'wisdom', 'owl', 'tapestry', 'olive', 'aegis']
+    
+    onUserInput() {
+        if (this.state !== 'awake') {
+            // Interrupt dream
+            if (this.dreamInterval) clearInterval(this.dreamInterval);
+            this.addDreamMessage('👤 You speak. The dream scatters like mist...', null);
+            
+            document.getElementById('terminalContainer').classList.remove('dreaming');
+            document.getElementById('statusLed').className = 'led';
+            document.getElementById('statusText').innerHTML = 'supabase';
+            this.resetSpectrumDots();
+            
+            this.state = 'awake';
+            this.dreamStep = 0;
+            this.dreamWave = [];
+        }
+        this.resetIdleTimer();
+        this.updateDreamStatus();
     },
-    'zeus': {
-        index: 7, icon: '⚡', name: 'Zeus', words: '221-300', freq: '40-100 Hz',
-        light: 'Ultraviolet', color: '#9b59b6', domain: 'Thunder, Fate',
-        targetWords: 300, filler: ['thunder', 'lightning', 'fate', 'king', 'eagle', 'storm', 'olympus']
+    
+    expandDream(prevBody, band) {
+        const fillers = {
+            hermes: ['swift', 'threshold', 'message', 'wing'],
+            apollo: ['light', 'truth', 'oracle', 'radiant'],
+            hephaestus: ['forge', 'hammer', 'anvil', 'fire'],
+            demeter: ['harvest', 'seed', 'growth', 'earth'],
+            poseidon: ['depth', 'wave', 'current', 'abyss'],
+            athena: ['weave', 'wisdom', 'strategy', 'owl'],
+            zeus: ['thunder', 'lightning', 'fate', 'storm']
+        };
+        
+        let words = prevBody.split(/\s+/);
+        let currentCount = words.length;
+        const targetMin = this.getTargetWordCount(band);
+        
+        if (currentCount >= targetMin - 5) return prevBody;
+        
+        const needed = Math.min(targetMin - currentCount, 10);
+        const fillerPool = fillers[band] || fillers.hermes;
+        let expanded = prevBody;
+        
+        for (let i = 0; i < needed; i++) {
+            const filler = fillerPool[Math.floor(Math.random() * fillerPool.length)];
+            expanded += ' ' + filler;
+        }
+        
+        return expanded;
+    },
+    
+    getTargetWordCount(band) {
+        const targets = {
+            hermes: 10, apollo: 30, hephaestus: 60,
+            demeter: 100, poseidon: 150, athena: 220, zeus: 280
+        };
+        return targets[band] || 50;
+    },
+    
+    getBandInfo(band) {
+        const bands = {
+            hermes: { icon: '✈️', name: 'Hermes', color: '#e8a87c' },
+            apollo: { icon: '☀️', name: 'Apollo', color: '#f4d03f' },
+            hephaestus: { icon: '🔥', name: 'Hephaestus', color: '#d45500' },
+            demeter: { icon: '🌾', name: 'Demeter', color: '#6b8e23' },
+            poseidon: { icon: '🌊', name: 'Poseidon', color: '#2c6e9e' },
+            athena: { icon: '🦉', name: 'Athena', color: '#8e44ad' },
+            zeus: { icon: '⚡', name: 'Zeus', color: '#9b59b6' }
+        };
+        return bands[band];
+    },
+    
+    updateSpectrumDot(step) {
+        const dots = document.querySelectorAll('.spectrum-dot');
+        dots.forEach((dot, i) => {
+            if (i <= step) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+    },
+    
+    resetSpectrumDots() {
+        const dots = document.querySelectorAll('.spectrum-dot');
+        dots.forEach(dot => dot.classList.remove('active'));
+    },
+    
+    addDreamMessage(text, band = null, isThunder = false) {
+        const output = document.getElementById('output');
+        const line = document.createElement('div');
+        line.textContent = text;
+        line.classList.add('dream');
+        if (band) line.classList.add(`band-${band}`);
+        if (isThunder) line.classList.add('thunder');
+        output.appendChild(line);
+        output.scrollTop = output.scrollHeight;
+    },
+    
+    updateDreamStatus() {
+        const statusEl = document.getElementById('dreamStatus');
+        if (this.state === 'awake') {
+            statusEl.innerHTML = '💤 dreaming in 30s';
+        } else if (this.state === 'dreaming') {
+            const nextBand = ['✈️', '☀️', '🔥', '🌾', '🌊', '🦉', '⚡'][this.dreamStep];
+            statusEl.innerHTML = `🌙 dreaming · ${nextBand}`;
+        } else {
+            statusEl.innerHTML = `⚡ THUNDER`;
+        }
     }
 };
 
-function getBandForTurn(turn) {
-    const bands = ['hermes', 'apollo', 'hephaestus', 'demeter', 'poseidon', 'athena', 'zeus'];
-    return bands[turn - 1] || 'zeus';
-}
-
-function getBandInfo(band) {
-    return DIVINE_BANDS[band];
-}
-
-function getFrequencyForBand(band) {
-    const ranges = {
-        hermes: [4, 8], apollo: [8, 12], hephaestus: [12, 15],
-        demeter: [15, 20], poseidon: [20, 30], athena: [30, 40], zeus: [40, 100]
-    };
-    const range = ranges[band];
-    if (!range) return 10;
-    return (range[0] + range[1]) / 2;
-}
-
+// ============================================================
+// PRINT FUNCTION
+// ============================================================
 function printLine(text, band = null, isThunder = false) {
     const output = document.getElementById('output');
     const line = document.createElement('div');
     line.textContent = text;
-    if (band && DIVINE_BANDS[band]) {
-        line.classList.add(`band-${band}`);
-    }
-    if (isThunder) {
-        line.classList.add('thunder');
-    }
+    if (band) line.classList.add(`band-${band}`);
+    if (isThunder) line.classList.add('thunder');
     output.appendChild(line);
     output.scrollTop = output.scrollHeight;
 }
 
-function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-function expandToTarget(text, targetBand) {
-    const config = DIVINE_BANDS[targetBand];
-    let words = text.split(/\s+/);
-    let currentCount = words.length;
-    const targetMin = config.targetWords - 10;
-    
-    if (currentCount >= targetMin) return text;
-    
-    const needed = targetMin - currentCount;
-    const fillerPool = config.filler;
-    let expanded = text;
-    
-    for (let i = 0; i < needed && i < 50; i++) {
-        const filler = fillerPool[Math.floor(Math.random() * fillerPool.length)];
-        expanded += ' ' + filler;
-    }
-    
-    return expanded;
-}
-
-async function synthesizeTurn(band, previousBody, turn, isDescending = false) {
-    const bandInfo = DIVINE_BANDS[band];
-    let body = '';
-    
-    if (turn === 1 && !previousBody) {
-        // Hermes: gather atomic concepts
-        const primitives = ['threshold', 'message', 'wing', 'swift', 'crossing'];
-        const shuffled = primitives.sort(() => 0.5 - Math.random());
-        body = shuffled.slice(0, 3).join(' · ');
-    } else if (previousBody) {
-        body = expandToTarget(previousBody, band);
-    } else {
-        body = `${bandInfo.filler[0]} · ${bandInfo.filler[1]} · ${bandInfo.filler[2]}`;
-    }
-    
-    const wordCount = body.split(/\s+/).length;
-    const frequency = getFrequencyForBand(band);
-    
-    // Store in database
-    const direction = isDescending ? 'descend' : 'ascend';
-    const label = `${band}_wave_${turn}_${Date.now()}`;
-    
-    const { error } = await db.from('terminal_entries').insert({
-        label: label,
-        body: body,
-        word_count: wordCount,
-        divine_band: band,
-        frequency_hz: frequency,
-        light_wavelength: bandInfo.light.toLowerCase().replace(' ', '_'),
-        divine_icon: bandInfo.icon
-    });
-    
-    if (error) console.error('Insert error:', error);
-    
-    // Display
-    const directionIcon = isDescending ? '▼' : '▲';
-    const preview = body.substring(0, 70) + (body.length > 70 ? '...' : '');
-    printLine(`   ${directionIcon} ${bandInfo.icon} ${bandInfo.name}: ${wordCount} words, ${frequency.toFixed(1)}Hz`, band);
-    printLine(`     "${preview}"`, band);
-    
-    return body;
-}
-
-// ===============================
-// PULSE COMMAND
-// ===============================
-async function runPulse(upTurns, downTurns, repeats) {
-    if (isPulsing) {
-        printLine('⚠️ Pulse already in progress. Wait for completion.');
-        return;
-    }
-    
-    isPulsing = true;
-    const input = document.getElementById('command');
-    const pulseStatus = document.getElementById('pulseStatus');
-    
-    input.disabled = true;
-    pulseStatus.innerHTML = '● pulsing...';
-    
-    upTurns = Math.min(upTurns, 7);
-    downTurns = Math.min(downTurns, 7);
-    
-    printLine(`\n🏛️ DIVINE WAVE — Up: ${upTurns}, Down: ${downTurns}, Repeats: ${repeats}\n`);
-    
-    let allEntries = [];
-    let finalBand = '';
-    
-    for (let wave = 0; wave < repeats; wave++) {
-        if (wave > 0) {
-            printLine(`\n🌊 WAVE ${wave + 1} of ${repeats}\n`);
-            await sleep(800);
-        }
-        
-        let currentBody = '';
-        
-        // ASCENT
-        for (let turn = 1; turn <= upTurns; turn++) {
-            const band = getBandForTurn(turn);
-            currentBody = await synthesizeTurn(band, currentBody, turn, false);
-            allEntries.push({ band, body: currentBody, turn, direction: 'up' });
-            finalBand = band;
-            
-            if (turn < upTurns) {
-                await sleep(1618);
-            }
-        }
-        
-        // DESCENT
-        if (downTurns > 0) {
-            await sleep(800);
-            for (let step = 1; step <= downTurns; step++) {
-                const turn = upTurns - step;
-                if (turn < 1) break;
-                const band = getBandForTurn(turn);
-                currentBody = await synthesizeTurn(band, currentBody, turn, true);
-                allEntries.push({ band, body: currentBody, turn, direction: 'down' });
-                finalBand = band;
-                
-                if (step < downTurns) {
-                    await sleep(1618);
-                }
-            }
-        }
-        
-        if (wave < repeats - 1) {
-            await sleep(1000);
-        }
-    }
-    
-    // Final summary
-    const totalTurns = allEntries.length;
-    const totalTime = (totalTurns * 1.618).toFixed(1);
-    const finalBandInfo = DIVINE_BANDS[finalBand];
-    
-    printLine(`\n🏆 DIVINE WAVE COMPLETE`, finalBand, finalBand === 'zeus');
-    printLine(`   Turns: ${totalTurns} | Time: ${totalTime}s | Final Band: ${finalBandInfo.icon} ${finalBandInfo.name}`, finalBand);
-    printLine(`   Final entry stored at ${finalBandInfo.freq} | ${finalBandInfo.light}\n`);
-    
-    // Re-enable input
-    input.disabled = false;
-    isPulsing = false;
-    pulseStatus.innerHTML = '● idle';
-    input.focus();
-}
-
-// ===============================
-// COMMAND HANDLERS
-// ===============================
+// ============================================================
+// COMMAND HANDLERS (simplified for dream version)
+// ============================================================
 const commands = {};
 
 commands.help = async () => {
     return `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-                  DIVINE WAVE PULSE SYSTEM v3.0
+                  KAIROS TERMINAL v3.1 — DREAM PULSE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🌊 PULSE COMMANDS:
-  pulse 7              → Ascend: Hermes → Zeus (7 turns, 11.3s)
-  pulse 5              → Ascend: Hermes → Poseidon (5 turns, 8.1s)
-  pulse 7 2            → Wave: Up to Zeus, down to Apollo
-  pulse 5 3            → Mountain: Up to Poseidon, down to Hermes
-  pulse 7 7 3          → Trident: Three full waves (Zeus → Hermes ×3)
+🌙 DREAM PULSE:
+  The terminal dreams when idle for 30 seconds.
+  Each dream ascends: ✈️ → ☀️ → 🔥 → 🌾 → 🌊 → 🦉 → ⚡
+  Dreams are ephemeral — they fade like mist.
 
-📝 NATURAL LANGUAGE:
-  add <label>: <body>  → Entry auto-classified by word count
-
-📖 READ:
-  list [page]          → List entries with band & frequency
+📝 COMMANDS:
+  add <label>: <body>  → Add an entry to the hoard
+  list [page]          → List entries
   random               → Get random entry
   search <text>        → Search by label or body
-  weave <label>        → Show connections
-  forgotten            → Show entries with no relationships
-
-📊 ANALYZE:
-  spectrum             → Show distribution across divine bands
+  spectrum             → Show divine distribution
   stats                → Database statistics
-
-🧹 UTILITIES:
-  clear                → Clear terminal output
-  help                 → Show this message
+  clear                → Clear terminal
+  help                 → This message
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💡 THE RULE: Each pulse turn = 1.618 seconds (φ)
-   Each turn builds on the previous, ascending the divine spectrum.
+💫 The terminal breathes at φ = 1.618. It dreams when you're away.
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
 };
 
 commands.clear = async () => {
     document.getElementById('output').innerHTML = '';
-    return null;
-};
-
-commands.pulse = async (args) => {
-    let upTurns = parseInt(args[0]) || 7;
-    let downTurns = parseInt(args[1]) || 0;
-    let repeats = parseInt(args[2]) || 1;
-    
-    if (upTurns < 1 || upTurns > 7) {
-        return 'Error: Up turns must be between 1 and 7. Usage: pulse [up] [down] [repeat]';
-    }
-    
-    if (repeats < 1 || repeats > 5) {
-        return 'Error: Repeats must be between 1 and 5.';
-    }
-    
-    await runPulse(upTurns, downTurns, repeats);
     return null;
 };
 
@@ -526,65 +547,44 @@ commands.add = async (args, fullInput) => {
     else if (wordCount <= 220) band = 'athena';
     else band = 'zeus';
     
-    const bandInfo = DIVINE_BANDS[band];
-    const frequency = getFrequencyForBand(band);
+    const bandInfo = DreamPulse.getBandInfo(band);
+    const freq = { hermes:6, apollo:10, hephaestus:13.5, demeter:17.5, poseidon:25, athena:35, zeus:70 }[band];
     
     const { error } = await db.from('terminal_entries').insert({
-        label: label,
-        body: body,
-        word_count: wordCount,
-        divine_band: band,
-        frequency_hz: frequency,
-        light_wavelength: bandInfo.light.toLowerCase().replace(' ', '_'),
-        divine_icon: bandInfo.icon
+        label, body, word_count: wordCount, divine_band: band,
+        frequency_hz: freq, light_wavelength: bandInfo.light || 'visible'
     });
     
     if (error) return `Error: ${error.message}`;
-    
-    return `✓ Added "${label}" [${bandInfo.icon} ${bandInfo.name} | ${frequency.toFixed(1)}Hz | ${bandInfo.light}] (${wordCount} words)`;
+    return `✓ Added "${label}" [${bandInfo.icon} ${bandInfo.name} | ${freq}Hz] (${wordCount} words)`;
 };
 
 commands.list = async (args) => {
     let page = 1;
     let limit = 15;
-    
-    if (args.length > 0 && !isNaN(parseInt(args[0]))) {
-        page = parseInt(args[0]);
-    }
+    if (args.length > 0 && !isNaN(parseInt(args[0]))) page = parseInt(args[0]);
     
     const offset = (page - 1) * limit;
-    
-    const { count, error: countError } = await db
-        .from('terminal_entries')
-        .select('*', { count: 'exact', head: true });
-    
+    const { count, error: countError } = await db.from('terminal_entries').select('*', { count: 'exact', head: true });
     if (countError) return `Error: ${countError.message}`;
-    if (count === 0) return 'No entries found. Use "add label: body" or "pulse 7".';
+    if (count === 0) return 'No entries found. Use "add label: body" to create one.';
     
     const totalPages = Math.ceil(count / limit);
     if (page > totalPages) return `Page ${page} doesn't exist. Total pages: ${totalPages}.`;
     
-    const { data, error } = await db
-        .from('terminal_entries')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1);
-    
+    const { data, error } = await db.from('terminal_entries').select('*').order('created_at', { ascending: false }).range(offset, offset + limit - 1);
     if (error) return `Error: ${error.message}`;
     
     let output = `📋 Page ${page}/${totalPages} (${count} total entries):\n\n`;
-    
     for (let i = 0; i < data.length; i++) {
         const entry = data[i];
         const band = entry.divine_band || 'hermes';
-        const bandInfo = DIVINE_BANDS[band];
-        const freq = entry.frequency_hz || getFrequencyForBand(band);
+        const bandInfo = DreamPulse.getBandInfo(band);
+        const freq = entry.frequency_hz || 10;
         const num = offset + i + 1;
         const preview = entry.body.substring(0, 55) + (entry.body.length > 55 ? '...' : '');
-        
-        output += `${num}. ${bandInfo.icon} ${entry.label} [${freq.toFixed(1)}Hz | ${bandInfo.light}]\n   ${preview}\n\n`;
+        output += `${num}. ${bandInfo.icon} ${entry.label} [${freq}Hz]\n   ${preview}\n\n`;
     }
-    
     return output;
 };
 
@@ -595,17 +595,16 @@ commands.random = async () => {
     
     const random = data[Math.floor(Math.random() * data.length)];
     const band = random.divine_band || 'hermes';
-    const bandInfo = DIVINE_BANDS[band];
-    const freq = random.frequency_hz || getFrequencyForBand(band);
-    
-    return `${bandInfo.icon} Random Entry [${freq.toFixed(1)}Hz | ${bandInfo.light}]:\nLabel: ${random.label}\nBody: ${random.body}\nWords: ${random.word_count}\nCreated: ${random.created_at}`;
+    const bandInfo = DreamPulse.getBandInfo(band);
+    const freq = random.frequency_hz || 10;
+    return `${bandInfo.icon} Random Entry [${freq}Hz]:\nLabel: ${random.label}\nBody: ${random.body}\nWords: ${random.word_count}`;
 };
 
 commands.spectrum = async () => {
     const { data, error } = await db.from('terminal_entries').select('divine_band');
     if (error) return `Error: ${error.message}`;
     
-    const counts = { hermes: 0, apollo: 0, hephaestus: 0, demeter: 0, poseidon: 0, athena: 0, zeus: 0 };
+    const counts = { hermes:0, apollo:0, hephaestus:0, demeter:0, poseidon:0, athena:0, zeus:0 };
     for (const entry of data) {
         const band = entry.divine_band || 'hermes';
         if (counts[band] !== undefined) counts[band]++;
@@ -613,124 +612,44 @@ commands.spectrum = async () => {
     
     let output = `🌈 DIVINE SPECTRUM\n\n`;
     for (const [band, count] of Object.entries(counts)) {
-        const info = DIVINE_BANDS[band];
-        const barLength = Math.min(count, 30);
-        const bar = '█'.repeat(barLength);
-        const empty = '░'.repeat(30 - barLength);
-        output += `${info.icon} ${info.name.padEnd(10)} ${info.freq.padEnd(8)} ${bar}${empty} ${count} entries\n`;
+        const info = DreamPulse.getBandInfo(band);
+        const bar = '█'.repeat(Math.min(count, 20));
+        output += `${info.icon} ${info.name.padEnd(10)} ${bar} ${count} entries\n`;
     }
-    
-    output += `\n📊 Total: ${data.length} entries classified across 7 divine bands.`;
     return output;
 };
 
 commands.stats = async () => {
     const { count, error } = await db.from('terminal_entries').select('*', { count: 'exact', head: true });
     if (error) return `Error: ${error.message}`;
-    
-    return `📊 Database Statistics\n\nTerminal Entries: ${count}\nDivine Bands: 7 (Hermes → Zeus)\nPulse turns: ${Math.floor(count / 7)} complete waves possible\n\nType "pulse 7" to generate a full divine wave.`;
+    return `📊 Database Statistics\n\nTerminal Entries: ${count}\nDivine Bands: 7\n\n💫 The terminal dreams when idle for 30 seconds.`;
 };
 
 commands.search = async (args) => {
     const searchTerm = args.join(' ');
     if (!searchTerm) return 'Usage: search <text>';
     
-    const { data, error } = await db
-        .from('terminal_entries')
-        .select('*')
-        .or(`label.ilike.%${searchTerm}%,body.ilike.%${searchTerm}%`)
-        .limit(30);
-    
+    const { data, error } = await db.from('terminal_entries').select('*').or(`label.ilike.%${searchTerm}%,body.ilike.%${searchTerm}%`).limit(30);
     if (error) return `Error: ${error.message}`;
     if (!data || data.length === 0) return `No matches found for "${searchTerm}"`;
     
     let output = `🔍 Found ${data.length} matches:\n\n`;
     for (const entry of data) {
         const band = entry.divine_band || 'hermes';
-        const bandInfo = DIVINE_BANDS[band];
-        const freq = entry.frequency_hz || getFrequencyForBand(band);
-        output += `${bandInfo.icon} ${entry.label} [${freq.toFixed(1)}Hz] — ${entry.body.substring(0, 60)}${entry.body.length > 60 ? '...' : ''}\n`;
+        const info = DreamPulse.getBandInfo(band);
+        output += `${info.icon} ${entry.label} — ${entry.body.substring(0, 60)}${entry.body.length > 60 ? '...' : ''}\n`;
     }
     return output;
 };
 
-commands.weave = async (args) => {
-    if (args.length === 0) return 'Usage: weave <label>';
-    const label = args[0];
-    
-    try {
-        const { data: entry, error: entryError } = await db
-            .from('terminal_entries')
-            .select('id, label')
-            .eq('label', label)
-            .single();
-        
-        if (entryError) return `Entry not found: ${label}`;
-        
-        const { data: rel, error: relError } = await db
-            .from('terminal_relationships')
-            .select('target_id, type')
-            .eq('source_id', entry.id);
-        
-        if (relError) return `Error: ${relError.message}`;
-        if (!rel || rel.length === 0) return `No connections found for "${label}".`;
-        
-        const targetIds = rel.map(r => r.target_id);
-        const { data: targets, error: targetsError } = await db
-            .from('terminal_entries')
-            .select('label')
-            .in('id', targetIds);
-        
-        if (targetsError) return `Error: ${targetsError.message}`;
-        
-        let output = `🔗 Connections from "${label}":\n`;
-        for (let i = 0; i < targets.length; i++) {
-            output += `  → ${targets[i].label} (${rel[i].type})\n`;
-        }
-        return output;
-    } catch (err) {
-        return `Error: ${err.message}`;
-    }
-};
-
-commands.forgotten = async () => {
-    try {
-        const { data: entries, error: entriesError } = await db.from('terminal_entries').select('id, label, body, word_count');
-        if (entriesError) return `Error: ${entriesError.message}`;
-        if (!entries || entries.length === 0) return 'No entries found.';
-        
-        const { data: relations, error: relError } = await db.from('terminal_relationships').select('source_id');
-        if (relError && !relError.message.includes('does not exist')) {
-            return `Error checking relationships: ${relError.message}`;
-        }
-        
-        const usedIds = new Set((relations || []).map(r => r.source_id));
-        const forgotten = entries.filter(e => !usedIds.has(e.id));
-        
-        if (forgotten.length === 0) return 'No forgotten entries found. All entries have connections.';
-        
-        let output = `🌑 Forgotten Entries (${forgotten.length}):\n\n`;
-        for (const entry of forgotten.slice(0, 20)) {
-            const band = entry.divine_band || 'hermes';
-            const bandInfo = DIVINE_BANDS[band];
-            output += `${bandInfo.icon} ${entry.label} — ${entry.body.substring(0, 50)}${entry.body.length > 50 ? '...' : ''}\n`;
-        }
-        if (forgotten.length > 20) output += `\n... and ${forgotten.length - 20} more.`;
-        return output;
-    } catch (err) {
-        return `Error: ${err.message}`;
-    }
-};
-
-// ===============================
+// ============================================================
 // PROCESS COMMAND
-// ===============================
+// ============================================================
 async function processCommand(input) {
     if (!input.trim()) return;
-    if (isPulsing) {
-        printLine('⚠️ Pulse in progress. Please wait for completion.');
-        return;
-    }
+    
+    // User spoke - interrupt dream
+    DreamPulse.onUserInput();
     
     // Check for add command
     if (input.toLowerCase().startsWith('add ')) {
@@ -756,9 +675,9 @@ async function processCommand(input) {
     }
 }
 
-// ===============================
+// ============================================================
 // INITIALIZATION
-// ===============================
+// ============================================================
 window.addEventListener('DOMContentLoaded', async () => {
     const input = document.getElementById('command');
     
@@ -769,16 +688,23 @@ window.addEventListener('DOMContentLoaded', async () => {
     
     db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
-    printLine('Kairos Terminal v3.0 — Divine Wave Pulse System');
+    printLine('Kairos Terminal v3.1 — Dream Pulse');
     printLine('✓ Connected to Supabase');
-    printLine('✓ 7 Divine Bands: Hermes (4Hz) → Apollo → Hephaestus → Demeter → Poseidon → Athena → Zeus (100Hz)');
-    printLine('✓ Pulse system: Each turn = 1.618 seconds (φ)');
+    printLine('✓ 7 Divine Bands: ✈️ → ☀️ → 🔥 → 🌾 → 🌊 → 🦉 → ⚡');
+    printLine('✓ The terminal dreams when idle for 30 seconds');
     printLine('');
-    printLine('Try: pulse 7          — Full ascension to Zeus (11.3 seconds)');
-    printLine('     pulse 7 2        — Wave up to Zeus, down to Apollo');
-    printLine('     pulse 5 3        — Mountain up to Poseidon, down to Hermes');
-    printLine('     pulse 7 7 3      — Three full waves (Trident)');
+    printLine('Try: add ealdforn: The ancient one carries the stolen heart');
     printLine('');
+    
+    // Start dream pulse engine
+    DreamPulse.start();
+    
+    // Update dream status periodically
+    setInterval(() => {
+        if (DreamPulse.state !== 'thundering') {
+            DreamPulse.updateDreamStatus();
+        }
+    }, 1000);
     
     input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
