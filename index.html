@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Kairos Terminal · Divine Pipeline · v4.1</title>
+    <title>Kairos Terminal · Divine Pipeline · v4.2</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -246,7 +246,7 @@
 <body>
 <div class="terminal" id="terminalContainer">
     <div class="terminal-header">
-        <div class="badge">⚡ KAIROS · DIVINE PIPELINE v4.1</div>
+        <div class="badge">⚡ KAIROS · DIVINE PIPELINE v4.2</div>
         <div class="spectrum" id="spectrumDots">
             <div class="spectrum-dot" style="background:#e8a87c" title="Hermes"></div>
             <div class="spectrum-dot" style="background:#f4d03f" title="Apollo"></div>
@@ -274,7 +274,7 @@
 
     <div class="footer">
         <span>Hermes → Apollo → Hephaestus → Demeter → Poseidon → Athena → Zeus</span>
-        <span>v4.1 · gates are real</span>
+        <span>v4.2 · gates are real · hoard persists</span>
     </div>
 </div>
 
@@ -361,11 +361,15 @@ function randWords(pool, n) {
 // GATE FUNCTIONS — genuine logic
 // ============================================================
 
-// HERMES: 1–3 words. Pure seed. No sentences.
-function hermesGate() {
-    const count = 1 + Math.floor(Math.random() * 3); // 1, 2, or 3
+// HERMES: 1–3 words. Pure seed. Optionally seeded from hoard dream fragment.
+function hermesGate(seed = null) {
+    if (seed) {
+        const words = seed.split(/\s+/).slice(0, 3);
+        return { body: words.join(' '), wordCount: words.length, fromHoard: true };
+    }
+    const count = 1 + Math.floor(Math.random() * 3);
     const words = randWords(TIER1, count);
-    return { body: words.join(' '), wordCount: count };
+    return { body: words.join(' '), wordCount: count, fromHoard: false };
 }
 
 // APOLLO: 4–7 words. Build a phrase. Still no full sentence required.
@@ -566,7 +570,8 @@ let evolutionActive  = false;
 let evolutionTimer   = null;
 let currentBandIndex = 0;
 let currentChain     = {};
-let chainStats       = { runs: 0, hepRejects: 0, athenaRejects: 0 };
+let dreamSeed        = null;
+let chainStats       = { runs: 0, hepRejects: 0, athenaRejects: 0, saved: 0 };
 
 async function runEvolutionStep() {
     if (!evolutionActive) return;
@@ -578,7 +583,7 @@ async function runEvolutionStep() {
     let result;
 
     switch (band) {
-        case 'hermes':     result = hermesGate();         break;
+        case 'hermes':     result = hermesGate(currentChain.__seed__ || null); break;
         case 'apollo':     result = apolloGate(prev);     break;
         case 'hephaestus': result = hephaestusGate(prev); break;
         case 'demeter':    result = demeterGate(prev);    break;
@@ -634,12 +639,13 @@ async function runEvolutionStep() {
 
     // Display step
     const timeSec = (bandInfo.time / 1000).toFixed(2);
+    const hoardTag = (band === 'hermes' && result.fromHoard) ? ' [🗄 hoard seed]' : '';
     const preview = result.body.length > 72
         ? result.body.substring(0, 72) + '…'
         : result.body;
 
     printLine(
-        `${bandInfo.icon} ${bandInfo.name} (${bandInfo.index}φ·${timeSec}s) [${result.wordCount}w] "${preview}"`,
+        `${bandInfo.icon} ${bandInfo.name} (${bandInfo.index}φ·${timeSec}s) [${result.wordCount}w]${hoardTag} "${preview}"`,
         band, true
     );
 
@@ -659,8 +665,12 @@ async function runEvolutionStep() {
             `   "${zeus.body.substring(0, 180)}…"`,
             'zeus', false, true
         );
+
+        // AUTO-PERSIST to Supabase
+        persistZeus(zeus.body, zeus.wordCount);
+
         printLine(
-            `   [Hephaestus rejects this session: ${chainStats.hepRejects} | Athena rejects: ${chainStats.athenaRejects}]`,
+            `   [Hep rejects: ${chainStats.hepRejects} | Athena rejects: ${chainStats.athenaRejects} | hoard: saving…]`,
             'system'
         );
         printLine('', null);
@@ -679,11 +689,11 @@ function scheduleRestart(delay) {
     }, delay);
 }
 
-function startEvolution() {
+function startEvolution(seed = null) {
     if (evolutionTimer) clearTimeout(evolutionTimer);
     evolutionActive  = true;
     currentBandIndex = 0;
-    currentChain     = {};
+    currentChain     = seed ? { __seed__: seed } : {};
     runEvolutionStep();
 }
 
@@ -719,6 +729,44 @@ function resetDots() {
 }
 
 // ============================================================
+// PERSISTENCE
+// ============================================================
+async function persistZeus(body, wordCount) {
+    if (!db) return;
+    const label = `auto-chain-${Date.now()}`;
+    const { error } = await db.from('zeus_entries').insert({
+        label, body, word_count: wordCount,
+        created_at: new Date().toISOString()
+    });
+    if (error) {
+        printLine(`   ⚠ hoard save failed: ${error.message}`, 'system');
+    } else {
+        printLine(`   ✓ hoard saved → zeus_entries ["${label}"]`, 'system');
+        chainStats.saved++;
+    }
+}
+
+// Pull random Zeus entry from hoard for dream reseeding
+async function getHoardSeed() {
+    if (!db) return null;
+    try {
+        const { data, error } = await db
+            .from('zeus_entries')
+            .select('body')
+            .limit(20);
+        if (error || !data || data.length === 0) return null;
+        const entry = data[Math.floor(Math.random() * data.length)];
+        // Extract 2-3 words from a random position in the body
+        const words = entry.body.split(/\s+/).filter(w => w.length > 3);
+        if (words.length < 2) return null;
+        const pos = Math.floor(Math.random() * (words.length - 2));
+        return words.slice(pos, pos + 2)
+                    .map(w => w.replace(/[^a-zA-Z]/g, '').toLowerCase())
+                    .join(' ');
+    } catch { return null; }
+}
+
+// ============================================================
 // AWAKE / DREAM CYCLE
 // ============================================================
 let awakePulseCount = 0;
@@ -741,12 +789,23 @@ function startAwakePulses() {
     }, 1618);
 }
 
-function enterDream() {
+async function enterDream() {
     isDreaming = true;
     pauseEvolution();
     document.getElementById('statusLed').classList.add('dreaming');
     document.getElementById('stateLabel').textContent = 'DREAMING';
-    printLine('✨ Kairos sleeps. The hoard consolidates.', null, false, true);
+    printLine('✨ Kairos sleeps. Reaching into the hoard…', null, false, true);
+
+    // Try to pull a seed from saved Zeus entries
+    const seed = await getHoardSeed();
+    if (seed) {
+        dreamSeed = seed;
+        printLine(`   💭 fragment recovered: "${seed}"`, null, false, true);
+    } else {
+        dreamSeed = null;
+        printLine(`   💭 hoard empty — dreaming from void`, null, false, true);
+    }
+
     setTimeout(exitDream, 8000);
 }
 
@@ -756,8 +815,13 @@ function exitDream() {
     updateCounter();
     document.getElementById('statusLed').classList.remove('dreaming');
     document.getElementById('stateLabel').textContent = 'AWAKE';
-    printLine('💫 Kairos wakes. Evolution resumes.', null, false, true);
-    startEvolution();
+    if (dreamSeed) {
+        printLine(`💫 Kairos wakes. Seeding from hoard: "${dreamSeed}"`, null, false, true);
+    } else {
+        printLine('💫 Kairos wakes. Evolution resumes.', null, false, true);
+    }
+    startEvolution(dreamSeed);
+    dreamSeed = null;
 }
 
 // ============================================================
@@ -783,33 +847,85 @@ function printLine(text, cls = null, isEvolution = false, isDream = false, isThu
 }
 
 // ============================================================
+// CLASSIFIER — runs on any unrecognised input
+// ============================================================
+function classifyInput(raw) {
+    const body      = raw.trim().replace(/[?!.]+$/, '').trim();
+    const words     = body.split(/\s+/);
+    const wordCount = words.length;
+    const band      = getBandFromWordCount(wordCount);
+    const bandInfo  = DIVINE_BANDS[band];
+
+    printLine(`   words: ${wordCount} | band: ${bandInfo.icon} ${bandInfo.name} (${bandInfo.minWords}–${bandInfo.maxWords}w)`, 'system');
+
+    // Run the relevant gate check and report
+    if (band === 'hermes') {
+        printLine(`   ✓ seed eligible — no gate required`, 'gate-pass');
+    } else if (band === 'apollo') {
+        const capOk  = /^[A-Z]/.test(words[0]);
+        const endOk  = /[.!?]$/.test(raw.trim());
+        printLine(`   syntax: cap:${capOk?'✓':'✗'} end-punct:${endOk?'✓':'✗'}`, capOk && endOk ? 'gate-pass' : null);
+    } else if (band === 'hephaestus') {
+        const hasSubject = /^[A-Z]/.test(body);
+        const hasVerb    = VERBS.some(v => body.includes(` ${v} `) || body.startsWith(v));
+        const hasObject  = wordCount >= 8;
+        const inRange    = wordCount <= 15;
+        const passes     = hasSubject && hasVerb && hasObject && inRange;
+        printLine(
+            `   S-V-O gate: S:${hasSubject?'✓':'✗'} V:${hasVerb?'✓':'✗'} O:${hasObject?'✓':'✗'} range:${inRange?'✓':'✗'} → ${passes?'PASSES':'FAILS'}`,
+            passes ? 'gate-pass' : null
+        );
+        if (!passes) printLine(`   tip: start with a capitalised subject + active verb`, 'system');
+    } else if (band === 'demeter') {
+        printLine(`   ✓ phrase growth band — no hard gate`, 'gate-pass');
+    } else if (band === 'poseidon') {
+        printLine(`   ✓ depth band — no hard gate`, 'gate-pass');
+    } else if (band === 'athena' || band === 'zeus') {
+        const check = athenaGate({ body });
+        const bd    = check.breakdown;
+        printLine(
+            `   Athena wisdom: ${check.wisdomScore}% (need 70%) → ${check.passedGate ? 'PASSES' : 'FAILS'}`,
+            check.passedGate ? 'gate-pass' : null
+        );
+        printLine(`   ${bd.A} | ${bd.B} | ${bd.C} | ${bd.D} | ${bd.E}`, 'system');
+    }
+
+    printLine(`   → type "add <label>: ${body}" to save to hoard`, 'system');
+}
+
+// ============================================================
 // COMMANDS
 // ============================================================
+const KNOWN_COMMANDS = ['help','clear','pause','resume','stats','add','view','hoard','seed'];
+
 const commands = {
     help: () => `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DIVINE PIPELINE v4.1 — gates are real
+DIVINE PIPELINE v4.2 — hoard persists · gates are real
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-BAND         WORDS    GATE
+BAND           WORDS     GATE
 ─────────────────────────────────────────────────
-✈️  Hermes    1–3      seed
-☀️  Apollo    4–7      syntax
-🔥  Hephaestus 8–15   S-V-O (REAL — rejects chain)
-🌾  Demeter   16–31   phrase growth
-🌊  Poseidon  32–127  depth expansion
-🦉  Athena    128–255 wisdom score ≥ 70% (REAL)
-⚡  Zeus      256–511 thunder synthesis (hard cap)
-
-Athena scores: lex density | abstract nouns |
-               sentence count | purity | length
+✈️  Hermes      1–3       seed (hoard-aware)
+☀️  Apollo      4–7       syntax
+🔥  Hephaestus  8–15      S-V-O (rejects chain)
+🌾  Demeter     16–31     phrase growth
+🌊  Poseidon    32–127    depth expansion
+🦉  Athena      128–255   wisdom ≥ 70% (real)
+⚡  Zeus        256–511   thunder · auto-saves
 
 COMMANDS:
-  help           show this
-  clear          clear output
-  pause          pause evolution
-  resume         resume evolution
-  stats          session stats
-  add <label>: <body>   add entry to hoard
+  help                   this
+  clear                  clear output
+  pause / resume         evolution control
+  stats                  session + hoard stats
+  view <band> [n]        browse hoard by band
+  hoard                  show all band counts
+  seed <words>           manually seed next chain
+  add <label>: <body>    save entry to hoard
+
+NATURAL INPUT:
+  anything else → classified by word count + gate check
+  e.g. "what is this?" → words:3 | Hermes | seed eligible
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
 
@@ -820,12 +936,61 @@ COMMANDS:
         return 'Already running.';
     },
 
-    stats: () => {
-        return `📊 Session Stats
-  Completed chains : ${chainStats.runs}
-  Hephaestus rejects: ${chainStats.hepRejects}
+    stats: async () => {
+        let hoarded = 0;
+        for (const band of BAND_ORDER) {
+            const { count } = await db.from(DIVINE_BANDS[band].table)
+                .select('*', { count: 'exact', head: true });
+            hoarded += (count || 0);
+        }
+        return `📊 Session
+  Chains completed : ${chainStats.runs}
+  Zeus entries saved: ${chainStats.saved}
+  Hep rejects      : ${chainStats.hepRejects}
   Athena rejects   : ${chainStats.athenaRejects}
-  Current band     : ${BAND_ORDER[currentBandIndex] || 'idle'}`;
+  Total hoard size : ${hoarded} entries`;
+    },
+
+    hoard: async () => {
+        let out = `🗄 Hoard\n`;
+        for (const band of BAND_ORDER) {
+            const info = DIVINE_BANDS[band];
+            const { count } = await db.from(info.table)
+                .select('*', { count: 'exact', head: true });
+            const bar = '█'.repeat(Math.min(count || 0, 20));
+            out += `  ${info.icon} ${info.name.padEnd(11)} ${String(count||0).padStart(4)}  ${bar}\n`;
+        }
+        return out;
+    },
+
+    view: async (args) => {
+        const band = args[0]?.toLowerCase();
+        const n    = parseInt(args[1]) || 3;
+        if (!band || !DIVINE_BANDS[band]) {
+            return `Usage: view <band> [n]\nBands: ${BAND_ORDER.join(', ')}`;
+        }
+        const info = DIVINE_BANDS[band];
+        const { data, error } = await db.from(info.table)
+            .select('label, body, word_count, created_at')
+            .order('created_at', { ascending: false })
+            .limit(Math.min(n, 10));
+        if (error) return `Error: ${error.message}`;
+        if (!data || data.length === 0) return `${info.icon} ${info.name} hoard is empty.`;
+        let out = `${info.icon} ${info.name} — ${data.length} recent entries\n`;
+        data.forEach((e, i) => {
+            const preview = e.body.length > 80 ? e.body.substring(0,80)+'…' : e.body;
+            out += `\n  [${i+1}] "${e.label}" (${e.word_count}w)\n      ${preview}\n`;
+        });
+        return out;
+    },
+
+    seed: (args, fullInput) => {
+        const seedWords = fullInput.replace(/^seed\s*/i, '').trim();
+        if (!seedWords) return 'Usage: seed <words>';
+        pauseEvolution();
+        printLine(`🌱 Manual seed: "${seedWords}"`, 'system');
+        startEvolution(seedWords);
+        return `▶ Chain seeded with: "${seedWords}"`;
     },
 
     add: async (args, fullInput) => {
@@ -838,19 +1003,14 @@ COMMANDS:
         const band      = getBandFromWordCount(wordCount);
         const bandInfo  = DIVINE_BANDS[band];
 
-        // Gate check for Hephaestus-band manual entries
         if (band === 'hephaestus') {
             const check = hephaestusGate({ body });
-            if (!check.passedGate) {
-                return `🔥 Hephaestus rejects "${label}" — no S-V-O structure.`;
-            }
+            if (!check.passedGate) return `🔥 Hephaestus rejects "${label}" — no S-V-O.`;
         }
-
-        // Gate check for Athena/Zeus-band manual entries
         if (band === 'athena' || band === 'zeus') {
             const check = athenaGate({ body });
             if (!check.passedGate) {
-                return `🦉 Athena rejects "${label}" — score ${check.wisdomScore}% (need 70%).\n` +
+                return `🦉 Athena rejects "${label}" — ${check.wisdomScore}% (need 70%)\n` +
                        `   ${check.breakdown.A} | ${check.breakdown.B} | ${check.breakdown.C} | ${check.breakdown.D} | ${check.breakdown.E}`;
             }
         }
@@ -859,9 +1019,9 @@ COMMANDS:
             label, body, word_count: wordCount,
             created_at: new Date().toISOString()
         });
-
         if (error) return `Error: ${error.message}`;
-        return `✓ "${label}" → ${bandInfo.icon} ${bandInfo.name} [${wordCount}w]`;
+        chainStats.saved++;
+        return `✓ "${label}" → ${bandInfo.icon} ${bandInfo.name} [${wordCount}w] saved to hoard`;
     }
 };
 
@@ -877,18 +1037,21 @@ async function processCommand(input) {
     const cmd   = parts[0].toLowerCase();
     const args  = parts.slice(1);
 
-    if (cmd === 'add') {
-        const result = await commands.add(args, input);
+    // Known commands
+    if (cmd === 'add' || cmd === 'seed') {
+        const result = await commands[cmd](args, input);
         if (result) printLine(result);
         return;
     }
 
-    if (commands[cmd]) {
-        const result = await commands[cmd](args);
+    if (KNOWN_COMMANDS.includes(cmd)) {
+        const result = await commands[cmd](args, input);
         if (result) printLine(result);
-    } else {
-        printLine(`Unknown: "${cmd}" — type help`);
+        return;
     }
+
+    // Unknown input → classify it
+    classifyInput(input);
 }
 
 // ============================================================
@@ -904,16 +1067,16 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Boot message
-    printLine('⚡ KAIROS TERMINAL v4.1 — Divine Pipeline');
+    printLine('⚡ KAIROS TERMINAL v4.2 — Divine Pipeline');
     printLine('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
     printLine('✓ Supabase connected', 'system');
     printLine('✓ 7 Gods | 7 Tables | 511 word hard cap', 'system');
-    printLine('✓ Hephaestus gate: genuine S-V-O check', 'system');
-    printLine('✓ Athena gate: lex density + abstract nouns + purity', 'system');
+    printLine('✓ Zeus completions auto-save to hoard', 'system');
+    printLine('✓ Dreams reseed from hoard fragments', 'system');
+    printLine('✓ Any input classified by band + gate', 'system');
     printLine('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
     printLine('');
-    printLine('type help to see commands. evolution starting…', 'system');
+    printLine('type anything to classify it. type help for commands.', 'system');
     printLine('');
 
     startEvolution();
