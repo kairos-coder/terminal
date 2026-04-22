@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Kairos Terminal · Divine Pipeline · v4.2</title>
+    <title>Kairos Terminal · Divine Pipeline · v4.3</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background: radial-gradient(circle at 20% 30%, #0a0c12, #030507);
+            background: radial-gradient(ellipse at 15% 25%, #080b10 0%, #020406 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -18,243 +18,173 @@
         }
 
         .terminal {
-            background-color: #0b0e14;
-            border: 1px solid #2a2f3f;
-            border-radius: 12px;
+            background-color: #080b11;
+            border: 1px solid #1e2535;
+            border-radius: 10px;
             width: 100%;
-            max-width: 1100px;
-            height: 90vh;
-            min-height: 600px;
+            max-width: 860px;
+            height: 92vh;
+            min-height: 580px;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            box-shadow: 0 0 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.03);
         }
 
         .terminal-header {
-            padding: 0.75rem 1.2rem;
-            background: #07090e;
-            border-bottom: 1px solid #1e232e;
+            padding: 0.6rem 1rem;
+            background: #050709;
+            border-bottom: 1px solid #151c28;
             display: flex;
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            gap: 0.5rem;
+            gap: 0.4rem;
         }
 
-        .badge {
-            color: #6c8b9f;
-            font-size: 0.7rem;
-            background: #10131c;
-            padding: 0.2rem 0.7rem;
-            border-radius: 20px;
-            border-left: 2px solid #3e6b8c;
-        }
+        .badge { color: #5a7a90; font-size: 0.65rem; letter-spacing: 0.05em; }
 
-        .spectrum {
-            display: flex;
-            gap: 0.2rem;
-            align-items: center;
-        }
+        .spectrum { display: flex; gap: 0.25rem; align-items: center; }
 
         .spectrum-dot {
-            width: 10px;
-            height: 10px;
+            width: 8px; height: 8px;
             border-radius: 2px;
-            transition: all 0.2s ease;
-            opacity: 0.3;
+            opacity: 0.18;
+            transition: opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
         }
-
         .spectrum-dot.active {
-            opacity: 1;
-            transform: scale(1.3);
-            box-shadow: 0 0 8px currentColor;
+            opacity: 1; transform: scale(1.35);
+            box-shadow: 0 0 7px currentColor;
         }
-
         .spectrum-dot.rejected {
-            opacity: 1;
-            transform: scale(1.3);
-            box-shadow: 0 0 12px #e74c3c;
-            background: #e74c3c !important;
-            animation: dotReject 0.4s ease-in-out;
+            opacity: 1; background: #c0392b !important;
+            box-shadow: 0 0 10px #c0392b;
+            animation: dotShake 0.35s ease;
+        }
+        @keyframes dotShake {
+            0%,100% { transform: scale(1.35) translateX(0); }
+            30%      { transform: scale(1.35) translateX(-3px); }
+            70%      { transform: scale(1.35) translateX(3px); }
         }
 
-        @keyframes dotReject {
-            0%, 100% { transform: scale(1.3) translateX(0); }
-            25% { transform: scale(1.3) translateX(-3px); }
-            75% { transform: scale(1.3) translateX(3px); }
-        }
-
-        .status {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #7c8ea0;
-            font-size: 0.7rem;
-        }
+        .status { display: flex; align-items: center; gap: 0.45rem; color: #4a5e72; font-size: 0.62rem; }
 
         .led {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: #2ecc71;
-            box-shadow: 0 0 4px #2ecc71;
-            animation: pulse 2s infinite;
+            width: 7px; height: 7px; border-radius: 50%;
+            background: #27ae60; box-shadow: 0 0 5px #27ae60;
+            animation: ledPulse 2.4s infinite;
         }
-
-        .led.dreaming {
-            background-color: #8e44ad;
-            box-shadow: 0 0 4px #8e44ad;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 0.5; }
-            50% { opacity: 1; }
-        }
+        .led.dreaming { background: #7d3c98; box-shadow: 0 0 5px #7d3c98; }
+        @keyframes ledPulse { 0%,100% { opacity: 0.45; } 50% { opacity: 1; } }
 
         .counter {
-            font-family: monospace;
-            font-size: 0.65rem;
-            background: #1a1f2a;
-            padding: 0.2rem 0.5rem;
-            border-radius: 20px;
+            font-size: 0.6rem; background: #0f141e;
+            padding: 0.15rem 0.4rem; border-radius: 10px; color: #3a4e62;
         }
 
         .output {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1rem;
-            font-size: 0.85rem;
-            line-height: 1.6;
-            color: #d4e0ed;
-            background: #0a0d14;
+            flex: 1; overflow-y: auto;
+            padding: 0.85rem 1rem;
+            font-size: 0.8rem; line-height: 1.65;
+            color: #c8d8e8; background: #060810;
+            scroll-behavior: smooth;
         }
+        .output::-webkit-scrollbar { width: 4px; }
+        .output::-webkit-scrollbar-track { background: transparent; }
+        .output::-webkit-scrollbar-thumb { background: #1e2535; border-radius: 2px; }
 
         .output div {
-            white-space: pre-wrap;
-            word-break: break-word;
-            margin-bottom: 0.15rem;
-            animation: lineIn 0.2s ease-out;
+            white-space: pre-wrap; word-break: break-word;
+            margin-bottom: 0.1rem;
+            animation: lineIn 0.18s ease-out;
         }
-
         @keyframes lineIn {
-            from { opacity: 0; transform: translateX(-4px); }
+            from { opacity: 0; transform: translateX(-3px); }
             to   { opacity: 1; transform: translateX(0); }
         }
 
-        /* Band colors */
-        .band-hermes     { color: #e8a87c; border-left: 2px solid #e8a87c; padding-left: 0.5rem; }
-        .band-apollo     { color: #f4d03f; border-left: 2px solid #f4d03f; padding-left: 0.5rem; }
-        .band-hephaestus { color: #d45500; border-left: 2px solid #d45500; padding-left: 0.5rem; }
-        .band-demeter    { color: #6b8e23; border-left: 2px solid #6b8e23; padding-left: 0.5rem; }
-        .band-poseidon   { color: #2c6e9e; border-left: 2px solid #2c6e9e; padding-left: 0.5rem; }
-        .band-athena     { color: #8e44ad; border-left: 2px solid #8e44ad; padding-left: 0.5rem; }
-        .band-zeus       { color: #c39bd3; border-left: 2px solid #9b59b6; padding-left: 0.5rem; text-shadow: 0 0 1px #9b59b6; }
+        /* Band lines */
+        .band-hermes     { color: #d4956a; border-left: 2px solid #d4956a; padding-left: 0.5rem; }
+        .band-apollo     { color: #c9a84c; border-left: 2px solid #c9a84c; padding-left: 0.5rem; }
+        .band-hephaestus { color: #b84a00; border-left: 2px solid #b84a00; padding-left: 0.5rem; }
+        .band-demeter    { color: #5a7a2a; border-left: 2px solid #5a7a2a; padding-left: 0.5rem; }
+        .band-poseidon   { color: #2a5e8a; border-left: 2px solid #2a5e8a; padding-left: 0.5rem; }
+        .band-athena     { color: #7a3a9a; border-left: 2px solid #7a3a9a; padding-left: 0.5rem; }
+        .band-zeus       { color: #b39ddb; border-left: 2px solid #7e57c2; padding-left: 0.5rem; }
 
-        .output div.evolution { opacity: 0.9; }
-        .output div.dream     { opacity: 0.75; font-style: italic; color: #a29bfe; }
-        .output div.system    { color: #4b5e77; }
-
-        .output div.thunder {
-            animation: thunderFlash 0.6s ease-in-out, lineIn 0.2s ease-out;
+        /* Zeus full body — shown on its own line, readable */
+        .zeus-full {
+            color: #c8b8f0;
+            border-left: 3px solid #7e57c2;
+            padding-left: 0.6rem;
+            margin: 0.25rem 0 0.5rem 0;
+            font-style: italic;
+            line-height: 1.8;
+            animation: thunderFlash 0.7s ease-out, lineIn 0.18s ease-out;
         }
-
-        .output div.rejected-gate {
-            color: #e74c3c;
-            border-left: 2px solid #e74c3c;
-            padding-left: 0.5rem;
-            animation: shake 0.3s ease-in-out, lineIn 0.2s ease-out;
-        }
-
-        .output div.gate-pass {
-            color: #2ecc71;
-            border-left: 2px solid #2ecc71;
-            padding-left: 0.5rem;
-        }
-
-        .output div.separator { color: #1e2a3a; }
-
         @keyframes thunderFlash {
-            0%   { text-shadow: 0 0 0px #9b59b6; color: #c39bd3; }
-            40%  { text-shadow: 0 0 25px #9b59b6, 0 0 50px #d4af37; color: #d4af37; }
-            100% { text-shadow: 0 0 0px #9b59b6; color: #c39bd3; }
+            0%   { text-shadow: none; }
+            35%  { text-shadow: 0 0 20px #9b59b6, 0 0 40px #d4af37; color: #ffe082; }
+            100% { text-shadow: none; color: #c8b8f0; }
         }
 
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25%       { transform: translateX(-5px); }
-            75%       { transform: translateX(5px); }
+        .dream {
+            opacity: 0.7; font-style: italic; color: #9c8de0;
+            border-left: 2px solid #3d2e6e; padding-left: 0.5rem;
+        }
+
+        .sys    { color: #2e3f52; }
+        .sysdim { color: #1e2a38; }
+
+        .gate-pass { color: #1e8449; border-left: 2px solid #1e8449; padding-left: 0.5rem; }
+        .gate-fail {
+            color: #922b21; border-left: 2px solid #922b21; padding-left: 0.5rem;
+            animation: lineShake 0.3s ease;
+        }
+        @keyframes lineShake {
+            0%,100% { transform: translateX(0); }
+            25%      { transform: translateX(-4px); }
+            75%      { transform: translateX(4px); }
         }
 
         .input-line {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: #06080e;
-            border-top: 1px solid #1a1f2a;
-            padding: 0.7rem 1rem;
+            display: flex; align-items: center; gap: 0.45rem;
+            background: #040608; border-top: 1px solid #111820;
+            padding: 0.6rem 1rem;
         }
-
-        .prompt { color: #7aa2c7; font-weight: 600; }
-
+        .prompt { color: #4a7a9b; font-weight: 700; font-size: 0.85rem; }
         #command {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: #eaf2ff;
-            font-family: inherit;
-            font-size: 0.9rem;
-            outline: none;
-            padding: 0.2rem 0;
-            caret-color: #7aa2c7;
+            flex: 1; background: transparent; border: none;
+            color: #ddeeff; font-family: inherit;
+            font-size: 0.82rem; outline: none; caret-color: #4a7a9b;
         }
 
         .footer {
-            background: #03050780;
-            font-size: 0.65rem;
-            padding: 0.3rem 1rem;
-            color: #4b5e77;
-            border-top: 1px solid #141a24;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 0.5rem;
+            background: #030508; font-size: 0.58rem;
+            padding: 0.25rem 1rem; color: #1e2a38;
+            border-top: 1px solid #0d1220;
+            display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.3rem;
         }
 
-        /* Gate stat pill */
-        .gate-stat {
-            display: inline-block;
-            font-size: 0.6rem;
-            padding: 0.05rem 0.35rem;
-            border-radius: 10px;
-            background: #131824;
-            color: #4b5e77;
-            margin-left: 0.3rem;
-            vertical-align: middle;
-        }
-
-        @media (max-width: 640px) {
-            .terminal-header { padding: 0.5rem 0.8rem; }
-            .output { padding: 0.8rem; font-size: 0.75rem; }
+        @media (max-width: 600px) {
+            .output { font-size: 0.72rem; padding: 0.7rem 0.8rem; }
             .input-line { padding: 0.5rem 0.8rem; }
-            #command { font-size: 0.8rem; }
-            .badge { font-size: 0.55rem; }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div class="terminal" id="terminalContainer">
+<div class="terminal">
     <div class="terminal-header">
-        <div class="badge">⚡ KAIROS · DIVINE PIPELINE v4.2</div>
+        <span class="badge">⚡ KAIROS · DIVINE PIPELINE v4.3</span>
         <div class="spectrum" id="spectrumDots">
-            <div class="spectrum-dot" style="background:#e8a87c" title="Hermes"></div>
-            <div class="spectrum-dot" style="background:#f4d03f" title="Apollo"></div>
-            <div class="spectrum-dot" style="background:#d45500" title="Hephaestus"></div>
-            <div class="spectrum-dot" style="background:#6b8e23" title="Demeter"></div>
-            <div class="spectrum-dot" style="background:#2c6e9e" title="Poseidon"></div>
-            <div class="spectrum-dot" style="background:#8e44ad" title="Athena"></div>
-            <div class="spectrum-dot" style="background:#9b59b6" title="Zeus"></div>
+            <div class="spectrum-dot" style="background:#d4956a" title="Hermes 1-2w"></div>
+            <div class="spectrum-dot" style="background:#c9a84c" title="Apollo 3-5w"></div>
+            <div class="spectrum-dot" style="background:#b84a00" title="Hephaestus 6-10w"></div>
+            <div class="spectrum-dot" style="background:#5a7a2a" title="Demeter 11-20w"></div>
+            <div class="spectrum-dot" style="background:#2a5e8a" title="Poseidon 21-35w"></div>
+            <div class="spectrum-dot" style="background:#7a3a9a" title="Athena 36-50w"></div>
+            <div class="spectrum-dot" style="background:#7e57c2" title="Zeus 51-64w"></div>
         </div>
         <div class="status">
             <span class="led" id="statusLed"></span>
@@ -268,311 +198,263 @@
     <div class="input-line">
         <span class="prompt">➜</span>
         <input type="text" id="command"
-               placeholder="help | add label: body | pause | resume"
+               placeholder="type anything to classify · help for commands"
                autofocus spellcheck="false" autocomplete="off">
     </div>
 
     <div class="footer">
-        <span>Hermes → Apollo → Hephaestus → Demeter → Poseidon → Athena → Zeus</span>
-        <span>v4.2 · gates are real · hoard persists</span>
+        <span>Hermes→Apollo→Hephaestus→Demeter→Poseidon→Athena→Zeus</span>
+        <span>v4.3 · 64w cap · resonance engine · no apis</span>
     </div>
 </div>
 
 <script>
 // ============================================================
-// KAIROS TERMINAL v4.1 — DIVINE PIPELINE
-// Fixes: genuine Hephaestus S-V-O gate, genuine Athena wisdom gate
+// KAIROS TERMINAL v4.3
+// Compressed bands · semantic clusters · full terminal legibility
+// No APIs. Structure + iteration + time = resonance.
 // ============================================================
 
-const SUPABASE_URL     = 'https://kzcucjcyxybypncbdbws.supabase.co';
+const SUPABASE_URL      = 'https://kzcucjcyxybypncbdbws.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw';
 
-let db = null;
+let db             = null;
 let commandHistory = [];
 let historyIndex   = -1;
 
 // ============================================================
-// DIVINE BANDS
+// BAND CONFIGURATION — 64w Zeus hard cap
 // ============================================================
 const DIVINE_BANDS = {
-    hermes:     { index:1, icon:'✈️',  name:'Hermes',     table:'hermes_entries',     minWords:1,   maxWords:3,   targetWords:2,   time:1618,  color:'#e8a87c' },
-    apollo:     { index:2, icon:'☀️',  name:'Apollo',     table:'apollo_entries',     minWords:4,   maxWords:7,   targetWords:5,   time:3236,  color:'#f4d03f' },
-    hephaestus: { index:3, icon:'🔥',  name:'Hephaestus', table:'hephaestus_entries', minWords:8,   maxWords:15,  targetWords:11,  time:4854,  color:'#d45500' },
-    demeter:    { index:4, icon:'🌾',  name:'Demeter',    table:'demeter_entries',    minWords:16,  maxWords:31,  targetWords:23,  time:6472,  color:'#6b8e23' },
-    poseidon:   { index:5, icon:'🌊',  name:'Poseidon',   table:'poseidon_entries',   minWords:32,  maxWords:127, targetWords:80,  time:8090,  color:'#2c6e9e' },
-    athena:     { index:6, icon:'🦉',  name:'Athena',     table:'athena_entries',     minWords:128, maxWords:255, targetWords:191, time:9708,  color:'#8e44ad', threshold:70 },
-    zeus:       { index:7, icon:'⚡',  name:'Zeus',       table:'zeus_entries',       minWords:256, maxWords:511, targetWords:383, time:11326, color:'#9b59b6' }
+    hermes:     { index:1, icon:'✈️',  name:'Hermes',     table:'hermes_entries',     min:1,  max:2,  target:2,  time:1618, color:'#d4956a' },
+    apollo:     { index:2, icon:'☀️',  name:'Apollo',     table:'apollo_entries',     min:3,  max:5,  target:4,  time:2427, color:'#c9a84c' },
+    hephaestus: { index:3, icon:'🔥',  name:'Hephaestus', table:'hephaestus_entries', min:6,  max:10, target:8,  time:3236, color:'#b84a00' },
+    demeter:    { index:4, icon:'🌾',  name:'Demeter',    table:'demeter_entries',    min:11, max:20, target:15, time:4045, color:'#5a7a2a' },
+    poseidon:   { index:5, icon:'🌊',  name:'Poseidon',   table:'poseidon_entries',   min:21, max:35, target:28, time:4854, color:'#2a5e8a' },
+    athena:     { index:6, icon:'🦉',  name:'Athena',     table:'athena_entries',     min:36, max:50, target:43, time:5663, color:'#7a3a9a', threshold:70 },
+    zeus:       { index:7, icon:'⚡',  name:'Zeus',       table:'zeus_entries',       min:51, max:64, target:57, time:6472, color:'#7e57c2' }
 };
 
 const BAND_ORDER = ['hermes','apollo','hephaestus','demeter','poseidon','athena','zeus'];
 
 function getBandFromWordCount(n) {
-    if (n <= 3)   return 'hermes';
-    if (n <= 7)   return 'apollo';
-    if (n <= 15)  return 'hephaestus';
-    if (n <= 31)  return 'demeter';
-    if (n <= 127) return 'poseidon';
-    if (n <= 255) return 'athena';
+    if (n <= 2)  return 'hermes';
+    if (n <= 5)  return 'apollo';
+    if (n <= 10) return 'hephaestus';
+    if (n <= 20) return 'demeter';
+    if (n <= 35) return 'poseidon';
+    if (n <= 50) return 'athena';
     return 'zeus';
 }
 
 // ============================================================
-// WORD POOL — two tiers
+// SEMANTIC CLUSTERS — source of resonance
+// Hermes seeds from one cluster. Chain inherits its gravity.
 // ============================================================
+const CLUSTERS = {
+    decay:   { words: ['ash','bone','rust','dust','hollow','ruin','rot','silt','husk','marrow','splinter','char','residue','fragment','remnant'] },
+    light:   { words: ['ember','threshold','dawn','signal','pulse','gleam','flicker','ignite','radiance','luminous','kindle','aureole','beacon','solstice','corona'] },
+    memory:  { words: ['echo','thread','trace','residue','mark','imprint','fossil','sediment','inscription','archive','relic','refrain','palimpsest','vestige','scar'] },
+    motion:  { words: ['tide','current','drift','spiral','return','surge','oscillate','cycle','recede','cascade','flux','eddy','undulate','momentum','vortex'] },
+    void:    { words: ['silence','gap','absence','depth','between','hollow','abyss','lacuna','suspension','interval','pause','null','negative','liminal','recess'] },
+    forge:   { words: ['iron','hammer','anvil','temper','alloy','slag','crucible','weld','smelt','quench','mold','cast','strike','fuse','reforge'] },
+    myth:    { words: ['serpent','raven','phoenix','wolf','oracle','augur','sovereign','exile','wanderer','threshold','labyrinth','augury','omen','sigil','totem'] }
+};
+const CLUSTER_NAMES = Object.keys(CLUSTERS);
 
-// Tier 1: raw material — concrete, short, generative
-const TIER1 = [
-    'threshold','whisper','wing','light','truth','forge','fire','depth','weave',
-    'thunder','echo','shadow','ember','thread','memory','longing','courage',
-    'fate','dream','silence','chaos','ancient','wisdom','heart','soul','time',
-    'space','void','serpent','phoenix','raven','oak','stone','river','mountain',
-    'star','moon','sun','wind','rain','dark','gate','blood','ash','bone','iron',
-    'tide','smoke','salt','tide','glass','mirror','dust','crown','root','blade'
-];
-
-// Tier 2: subjects — give Hephaestus real S-V-O fodder
+// Universal pools — structure, not theme
 const SUBJECTS = [
     'The raven','The forge','An ember','The river','A threshold','The dreamer',
     'The watcher','A blade','The tide','Memory','Silence','The ancient flame',
-    'A root system','The broken crown','The void','Dust','Iron','The gate'
+    'A root system','The void','Dust','Iron','The gate','The oracle',
+    'A hollow bone','The current','Residue','The exile'
 ];
-
-// Tier 3: verbs — active, not just "is/are"
 const VERBS = [
     'carries','holds','breaks','remembers','forgets','burns','returns','rises',
     'fractures','echoes','consumes','reveals','dissolves','endures','recedes',
-    'descends','illuminates','devours','persists','collapses'
+    'descends','illuminates','devours','persists','collapses','accumulates',
+    'drifts','spirals','marks','inscribes','tempers','suspends'
 ];
-
-// Tier 4: abstract nouns for Athena's lexical check
-const ABSTRACT_NOUNS = [
+const ABSTRACT = [
     'consciousness','impermanence','recursion','entropy','emergence','paradox',
     'resonance','dissolution','transcendence','fragmentation','memory','longing',
-    'threshold','void','fate','wisdom','chaos','silence','truth','dream'
+    'threshold','void','fate','wisdom','chaos','silence','truth','absence',
+    'oscillation','continuity','rupture','interval','sediment','trace'
 ];
 
-function rand(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-function randWords(pool, n) {
-    const s = [...pool].sort(() => 0.5 - Math.random());
-    return s.slice(0, n);
-}
+function rand(arr)     { return arr[Math.floor(Math.random() * arr.length)]; }
+function randN(arr, n) { return [...arr].sort(() => 0.5 - Math.random()).slice(0, n); }
+function wc(str)       { return str.trim().split(/\s+/).filter(Boolean).length; }
+function cap(str)      { return str.charAt(0).toUpperCase() + str.slice(1); }
 
 // ============================================================
-// GATE FUNCTIONS — genuine logic
+// EVOLUTION STATE
+// ============================================================
+let evolutionActive  = false;
+let evolutionTimer   = null;
+let currentBandIndex = 0;
+let currentChain     = {};
+let activeCluster    = null;
+let dreamSeed        = null;
+let chainStats       = { runs:0, hepRejects:0, athenaRejects:0, saved:0 };
+
+// ============================================================
+// GATE FUNCTIONS
 // ============================================================
 
-// HERMES: 1–3 words. Pure seed. Optionally seeded from hoard dream fragment.
+// HERMES: 1–2 words. Seeds from one cluster. Sets chain gravity.
 function hermesGate(seed = null) {
-    if (seed) {
-        const words = seed.split(/\s+/).slice(0, 3);
-        return { body: words.join(' '), wordCount: words.length, fromHoard: true };
+    if (seed && seed.cluster) {
+        activeCluster = seed.cluster;
+        return { body: seed.words.slice(0,2).join(' '), wordCount: seed.words.length, fromHoard: true };
     }
-    const count = 1 + Math.floor(Math.random() * 3);
-    const words = randWords(TIER1, count);
-    return { body: words.join(' '), wordCount: count, fromHoard: false };
+    activeCluster  = rand(CLUSTER_NAMES);
+    const pool     = CLUSTERS[activeCluster].words;
+    const count    = 1 + Math.floor(Math.random() * 2);
+    const words    = randN(pool, count);
+    return { body: words.join(' '), wordCount: words.length, fromHoard: false };
 }
 
-// APOLLO: 4–7 words. Build a phrase. Still no full sentence required.
+// APOLLO: 3–5 words. Extends seed within same cluster.
 function apolloGate(prev) {
-    const seed = prev.body;
-    const needed = 4 + Math.floor(Math.random() * 4); // 4–7
-    const seedWords = seed.split(/\s+/);
-    const extra = randWords(TIER1, needed - seedWords.length);
-    const words = [...seedWords, ...extra].slice(0, needed);
-    // Capitalise first word only
-    words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
+    const pool      = CLUSTERS[activeCluster].words;
+    const seedWords = prev.body.split(/\s+/);
+    const needed    = 3 + Math.floor(Math.random() * 3);
+    const extra     = randN(pool.filter(w => !seedWords.includes(w)), needed - seedWords.length);
+    const words     = [...seedWords, ...extra].slice(0, needed);
+    words[0]        = cap(words[0]);
     return { body: words.join(' '), wordCount: words.length };
 }
 
-// HEPHAESTUS: 8–15 words. GENUINE S-V-O gate.
-// Builds a real sentence: Subject + Verb + Object phrase.
-// If the constructed sentence fails the S-V-O check it is REJECTED.
-// On rejection the chain restarts at Hermes.
+// HEPHAESTUS: 6–10 words. REAL S-V-O gate. Rejects chain on failure.
 function hephaestusGate(prev) {
-    const subject    = rand(SUBJECTS);
-    const verb       = rand(VERBS);
-    const objSeed    = prev.body.toLowerCase().replace(/[^a-z\s]/g,'').trim();
-    const filler     = randWords(TIER1, 3);
-    const objectPhrase = `${objSeed} ${filler.join(' ')}`;
+    const pool    = CLUSTERS[activeCluster] ? CLUSTERS[activeCluster].words : CLUSTERS.void.words;
+    const subject = rand(SUBJECTS);
+    const verb    = rand(VERBS);
+    const obj     = [...prev.body.split(/\s+/), ...randN(pool, 3)].slice(0,5).join(' ').toLowerCase();
+    const raw     = `${subject} ${verb} ${obj}`;
+    const words   = raw.split(/\s+/).slice(0, 10);
+    const body    = words.join(' ') + '.';
 
-    const sentence = `${subject} ${verb} ${objectPhrase}`;
-    const words    = sentence.split(/\s+/).slice(0, 15);
-    const body     = words.join(' ') + '.';
-
-    // Gate check — must have:
-    // 1. a capitalised word (subject)
-    // 2. a known verb from VERBS list
-    // 3. at least one object word after the verb
-    // 4. word count 8–15
-    const hasSubject  = /^[A-Z]/.test(body);
-    const hasVerb     = VERBS.some(v => body.includes(` ${v} `));
-    const hasObject   = words.length >= 8;
-    const inRange     = words.length >= 8 && words.length <= 15;
-
-    const passed = hasSubject && hasVerb && hasObject && inRange;
+    const hasSubject = /^[A-Z]/.test(body);
+    const hasVerb    = VERBS.some(v => body.includes(` ${v} `));
+    const hasObject  = words.length >= 6;
+    const inRange    = words.length >= 6 && words.length <= 10;
+    const passed     = hasSubject && hasVerb && hasObject && inRange;
 
     return { body, wordCount: words.length, passedGate: passed,
              debug: { hasSubject, hasVerb, hasObject, inRange } };
 }
 
-// DEMETER: 16–31 words. Organic growth — no canned phrases injected into logic.
+// DEMETER: 11–20 words. Organic cluster growth.
 function demeterGate(prev) {
-    let body  = prev.body.replace(/\.$/, '');
-    let words = body.split(/\s+/);
+    const pool  = CLUSTERS[activeCluster].words;
+    let body    = prev.body.replace(/\.$/, '');
+    let words   = body.split(/\s+/);
 
-    // Grow with tier1 words in small clusters
-    while (words.length < 16) {
-        const cluster = randWords(TIER1, 3).join(' ');
-        body  = `${body}, ${cluster}`;
+    while (words.length < 11) {
+        body  = `${body}, ${randN(pool, 2).join(' ')}`;
         words = body.split(/\s+/);
     }
-
-    words = words.slice(0, 31);
+    words = words.slice(0, 20);
     body  = words.join(' ');
     if (!/[.!?]$/.test(body)) body += '.';
-
     return { body, wordCount: words.length };
 }
 
-// POSEIDON: 32–127 words. Depth expansion — pulls from both tiers.
+// POSEIDON: 21–35 words. Depth — cluster + abstract layer.
 function poseidonGate(prev) {
-    let body  = prev.body.replace(/\.$/, '');
-    let words = body.split(/\s+/);
+    const pool = CLUSTERS[activeCluster].words;
+    let body   = prev.body.replace(/\.$/, '');
+    let words  = body.split(/\s+/);
 
     const expansions = [
-        () => `Beneath that, ${rand(SUBJECTS).toLowerCase()} ${rand(VERBS)} ${rand(TIER1)} and ${rand(TIER1)}.`,
-        () => `Where ${rand(TIER1)} meets ${rand(TIER1)}, something ${rand(VERBS)}.`,
-        () => `The ${rand(TIER1)} of ${rand(TIER1)} ${rand(VERBS)} without witness.`,
-        () => `In the space between ${rand(TIER1)} and ${rand(TIER1)}, ${rand(TIER1)} accumulates.`,
-        () => `${rand(SUBJECTS)} ${rand(VERBS)} what ${rand(TIER1)} cannot name.`
+        () => `${rand(SUBJECTS)} ${rand(VERBS)} what ${rand(pool)} cannot contain.`,
+        () => `In the space between ${rand(pool)} and ${rand(pool)}, ${rand(ABSTRACT)} accumulates.`,
+        () => `Where ${rand(pool)} meets ${rand(pool)}, something ${rand(VERBS)}.`,
+        () => `${rand(pool)} against ${rand(ABSTRACT)} — ${rand(SUBJECTS).toLowerCase()} ${rand(VERBS)}.`
     ];
 
-    while (words.length < 32) {
-        const phrase = rand(expansions)();
-        body  = `${body} ${phrase}`;
+    while (words.length < 21) {
+        body  = `${body} ${rand(expansions)()}`;
         words = body.split(/\s+/);
     }
-
-    words = words.slice(0, 127);
+    words = words.slice(0, 35);
     body  = words.join(' ');
     if (!/[.!?]$/.test(body)) body += '.';
-
     return { body, wordCount: words.length };
 }
 
-// ATHENA: 128–255 words. GENUINE wisdom gate.
-// Scores on criteria that earlier gates do NOT pre-load.
-//
-// Criteria (each worth 20pts, pass threshold = 70):
-//   A. Lexical density   ≥ 0.65  (unique/total words)
-//   B. Abstract nouns    ≥ 2     (from curated list)
-//   C. Sentence count    ≥ 3     (structural variety)
-//   D. No filler phrase  (rejects bodies that still contain
-//                          the old canned padding strings)
-//   E. Word count        128–255
-
-const ATHENA_FILLERS = [
-    'like seeds in spring soil','growing toward the light',
-    'as the harvest comes','nurtured by patient hands',
-    'through the turning seasons','from darkness into dawn',
-    'beneath the surface something stirs',
-    'in the abyss where light never reaches',
-    'carried by currents older than memory',
-    'where pressure shapes what dares to descend',
-    'ZEUS THUNDERS','the cycle ends','a new evolution begins',
-    'thus speaks the king of gods','therefore wisdom requires patience',
-    'not all who wander are lost'
-];
+// ATHENA: 36–50 words. REAL wisdom gate. 4 criteria × 25pts each.
+// Criteria are independent of what earlier gates pre-load.
+const ATHENA_THRESHOLD = 70;
 
 function athenaGate(prev) {
-    let body  = prev.body;
-    let words = body.split(/\s+/);
+    const pool = CLUSTERS[activeCluster] ? CLUSTERS[activeCluster].words : CLUSTERS.void.words;
+    let body   = prev.body.replace(/[.!?]$/, '');
+    let words  = body.split(/\s+/);
 
-    // Expand to 128 minimum using genuine constructed sentences
-    while (words.length < 128) {
-        const expansion = `${rand(SUBJECTS)} ${rand(VERBS)} ${rand(TIER1)} — ` +
-                          `${rand(ABSTRACT_NOUNS)} without ${rand(TIER1)}, ` +
-                          `${rand(TIER1)} against ${rand(TIER1)}.`;
-        body  = `${body} ${expansion}`;
+    while (words.length < 36) {
+        const s = `${rand(SUBJECTS)} ${rand(VERBS)} ${rand(pool)} — ${rand(ABSTRACT)} without ${rand(pool)}.`;
+        body  = `${body} ${s}`;
         words = body.split(/\s+/);
     }
-
-    words = words.slice(0, 255);
+    words = words.slice(0, 50);
     body  = words.join(' ');
     if (!/[.!?—]$/.test(body)) body += '.';
 
-    // --- SCORING ---
-    const totalWords  = words.length;
-    const uniqueWords = new Set(words.map(w => w.toLowerCase().replace(/[^a-z]/g,''))).size;
-    const lexDensity  = uniqueWords / totalWords;
+    const total  = words.length;
+    const unique = new Set(words.map(w => w.toLowerCase().replace(/[^a-z]/g,''))).size;
+    const lexDen = unique / total;
 
-    const abstractCount = ABSTRACT_NOUNS.filter(n =>
-        body.toLowerCase().includes(n)
-    ).length;
+    const absCount  = ABSTRACT.filter(a => body.toLowerCase().includes(a)).length;
+    const sentCount = (body.match(/[.!?]/g) || []).length;
 
-    const sentenceCount = (body.match(/[.!?]/g) || []).length;
-
-    const hasFillerPhrases = ATHENA_FILLERS.some(f =>
-        body.toLowerCase().includes(f.toLowerCase())
-    );
+    // Repeated trigram check — catches mechanical padding
+    const trigrams = [];
+    let hasPadding = false;
+    for (let i = 0; i < words.length - 2; i++) {
+        const tri = words.slice(i,i+3).join(' ').toLowerCase();
+        if (trigrams.includes(tri)) { hasPadding = true; break; }
+        trigrams.push(tri);
+    }
 
     let score = 0;
-    const breakdown = {};
+    const bd  = {};
 
-    breakdown.lexicalDensity = lexDensity;
-    if (lexDensity >= 0.65) { score += 20; breakdown.A = '✓ lex'; }
-    else                     { breakdown.A = `✗ lex(${(lexDensity*100).toFixed(0)}%)`; }
+    if (lexDen  >= 0.72) { score += 25; bd.A = `✓ lex(${(lexDen*100).toFixed(0)}%)`; }
+    else                  {              bd.A = `✗ lex(${(lexDen*100).toFixed(0)}%)`; }
+    if (absCount >= 1)    { score += 25; bd.B = `✓ abs(${absCount})`; }
+    else                  {              bd.B = `✗ abs(0)`; }
+    if (sentCount >= 2)   { score += 25; bd.C = `✓ snt(${sentCount})`; }
+    else                  {              bd.C = `✗ snt(${sentCount})`; }
+    if (!hasPadding)      { score += 25; bd.D = `✓ pure`; }
+    else                  {              bd.D = `✗ repeat`; }
+    bd.E = total >= 36 && total <= 50 ? `✓ len(${total})` : `✗ len(${total})`;
 
-    breakdown.abstractCount = abstractCount;
-    if (abstractCount >= 2) { score += 20; breakdown.B = '✓ abs'; }
-    else                    { breakdown.B = `✗ abs(${abstractCount})`; }
-
-    breakdown.sentenceCount = sentenceCount;
-    if (sentenceCount >= 3) { score += 20; breakdown.C = '✓ snt'; }
-    else                    { breakdown.C = `✗ snt(${sentenceCount})`; }
-
-    if (!hasFillerPhrases) { score += 20; breakdown.D = '✓ pure'; }
-    else                   { breakdown.D = '✗ filler'; }
-
-    if (totalWords >= 128 && totalWords <= 255) { score += 20; breakdown.E = '✓ len'; }
-    else                                         { breakdown.E = `✗ len(${totalWords})`; }
-
-    const passed = score >= 70;
-    return { body, wordCount: totalWords, wisdomScore: score, passedGate: passed, breakdown };
+    return { body, wordCount: total, wisdomScore: score, passedGate: score >= ATHENA_THRESHOLD, breakdown: bd };
 }
 
-// ZEUS: 256–511 words. Thunder synthesis. Hard cap.
+// ZEUS: 51–64 words. Hard cap. Full body displayed in terminal.
 function zeusGate(prev) {
-    let body  = prev.body.replace(/[.!?]$/, '');
-    let words = body.split(/\s+/);
+    const pool = CLUSTERS[activeCluster] ? CLUSTERS[activeCluster].words : CLUSTERS.void.words;
+    let body   = prev.body.replace(/[.!?—]$/, '');
+    let words  = body.split(/\s+/);
 
-    // Zeus adds weight — longer, compound constructions
-    while (words.length < 256) {
-        const thunder =
-            `${rand(SUBJECTS)} ${rand(VERBS)} what ${rand(ABSTRACT_NOUNS)} conceals — ` +
-            `${rand(TIER1)}, ${rand(TIER1)}, and the ${rand(TIER1)} of ${rand(ABSTRACT_NOUNS)}.`;
-        body  = `${body} ${thunder}`;
+    while (words.length < 51) {
+        const t = `${rand(SUBJECTS)} ${rand(VERBS)} what ${rand(ABSTRACT)} conceals — ${rand(pool)}, ${rand(pool)}, the ${rand(ABSTRACT)} of ${rand(pool)}.`;
+        body  = `${body} ${t}`;
         words = body.split(/\s+/);
     }
-
-    // Hard cap at 511
-    words = words.slice(0, 511);
+    words = words.slice(0, 64);
     body  = words.join(' ');
     if (!/[.!?—]$/.test(body)) body += '.';
-
     return { body, wordCount: words.length };
 }
 
 // ============================================================
 // EVOLUTION ENGINE
 // ============================================================
-let evolutionActive  = false;
-let evolutionTimer   = null;
-let currentBandIndex = 0;
-let currentChain     = {};
-let dreamSeed        = null;
-let chainStats       = { runs: 0, hepRejects: 0, athenaRejects: 0, saved: 0 };
-
 async function runEvolutionStep() {
     if (!evolutionActive) return;
 
@@ -581,7 +463,6 @@ async function runEvolutionStep() {
     const prev     = currentChain[BAND_ORDER[currentBandIndex - 1]] || {};
 
     let result;
-
     switch (band) {
         case 'hermes':     result = hermesGate(currentChain.__seed__ || null); break;
         case 'apollo':     result = apolloGate(prev);     break;
@@ -596,16 +477,9 @@ async function runEvolutionStep() {
     if (band === 'hephaestus' && !result.passedGate) {
         chainStats.hepRejects++;
         markDotRejected(currentBandIndex);
-        printLine(
-            `🔥 Hephaestus REJECTS — no S-V-O structure. Chain restarts.`,
-            null, false, false, false, true
-        );
         const d = result.debug;
-        printLine(
-            `   [S:${d.hasSubject?'✓':'✗'} V:${d.hasVerb?'✓':'✗'} O:${d.hasObject?'✓':'✗'} range:${d.inRange?'✓':'✗'}]`,
-            null, false, false, false, true
-        );
-        scheduleRestart(3000);
+        printLine(`🔥 Hephaestus rejects · S:${d.hasSubject?'✓':'✗'} V:${d.hasVerb?'✓':'✗'} O:${d.hasObject?'✓':'✗'} · chain restarts`, 'gate-fail');
+        scheduleRestart(2500);
         return;
     }
 
@@ -615,66 +489,42 @@ async function runEvolutionStep() {
             chainStats.athenaRejects++;
             markDotRejected(currentBandIndex);
             const bd = result.breakdown;
-            printLine(
-                `🦉 Athena REJECTS — score ${result.wisdomScore}% (need 70%)`,
-                null, false, false, false, true
-            );
-            printLine(
-                `   ${bd.A} | ${bd.B} | ${bd.C} | ${bd.D} | ${bd.E}`,
-                null, false, false, false, true
-            );
-            // Retry from Poseidon (not full restart)
+            printLine(`🦉 Athena rejects ${result.wisdomScore}% · ${bd.A} · ${bd.B} · ${bd.C} · ${bd.D} → retry Poseidon`, 'gate-fail');
             currentBandIndex = BAND_ORDER.indexOf('poseidon');
-            evolutionTimer = setTimeout(runEvolutionStep, 2500);
+            evolutionTimer   = setTimeout(runEvolutionStep, 2000);
             return;
         }
         const bd = result.breakdown;
-        printLine(
-            `🦉 Athena ACCEPTS — ${result.wisdomScore}% | ${bd.A} | ${bd.B} | ${bd.C} | ${bd.D} | ${bd.E}`,
-            'gate-pass'
-        );
+        printLine(`🦉 Athena accepts ${result.wisdomScore}% · ${bd.A} · ${bd.B} · ${bd.C} · ${bd.D}`, 'gate-pass');
     }
 
     currentChain[band] = result;
 
-    // Display step
-    const timeSec = (bandInfo.time / 1000).toFixed(2);
-    const hoardTag = (band === 'hermes' && result.fromHoard) ? ' [🗄 hoard seed]' : '';
-    const preview = result.body.length > 72
-        ? result.body.substring(0, 72) + '…'
-        : result.body;
+    // ── DISPLAY ──
+    const clusterTag = (band === 'hermes') ? ` [${activeCluster}]` : '';
+    const hoardTag   = (band === 'hermes' && result.fromHoard) ? ' 🗄' : '';
+    const timeSec    = (bandInfo.time / 1000).toFixed(2);
 
-    printLine(
-        `${bandInfo.icon} ${bandInfo.name} (${bandInfo.index}φ·${timeSec}s) [${result.wordCount}w]${hoardTag} "${preview}"`,
-        band, true
-    );
+    if (band === 'zeus') {
+        // Zeus: header line + full body on next line
+        printLine(`${bandInfo.icon} ${bandInfo.name} (${bandInfo.index}φ·${timeSec}s) [${result.wordCount}w]`, band, true);
+        printLine(result.body, 'zeus-full');
+    } else {
+        printLine(
+            `${bandInfo.icon} ${bandInfo.name} (${bandInfo.index}φ·${timeSec}s) [${result.wordCount}w]${clusterTag}${hoardTag} "${result.body}"`,
+            band, true
+        );
+    }
 
     activateDot(currentBandIndex);
     currentBandIndex++;
 
     if (currentBandIndex >= BAND_ORDER.length) {
-        // ── ZEUS THUNDER ──
         chainStats.runs++;
-        const zeus = currentChain.zeus;
         printLine('', null);
-        printLine(
-            `⚡ ZEUS THUNDERS — chain #${chainStats.runs} complete (${zeus.wordCount}w)`,
-            'zeus', false, false, true
-        );
-        printLine(
-            `   "${zeus.body.substring(0, 180)}…"`,
-            'zeus', false, true
-        );
-
-        // AUTO-PERSIST to Supabase
-        persistZeus(zeus.body, zeus.wordCount);
-
-        printLine(
-            `   [Hep rejects: ${chainStats.hepRejects} | Athena rejects: ${chainStats.athenaRejects} | hoard: saving…]`,
-            'system'
-        );
-        printLine('', null);
-        scheduleRestart(5000);
+        printLine(`⚡ chain #${chainStats.runs} · cluster: ${activeCluster} · ${currentChain.zeus.wordCount}w · saving…`, 'sys');
+        persistZeus(currentChain.zeus.body, currentChain.zeus.wordCount, activeCluster);
+        scheduleRestart(4000);
     } else {
         evolutionTimer = setTimeout(runEvolutionStep, bandInfo.time);
     }
@@ -684,9 +534,7 @@ function scheduleRestart(delay) {
     resetDots();
     currentBandIndex = 0;
     currentChain     = {};
-    evolutionTimer   = setTimeout(() => {
-        if (evolutionActive) runEvolutionStep();
-    }, delay);
+    evolutionTimer   = setTimeout(() => { if (evolutionActive) runEvolutionStep(); }, delay);
 }
 
 function startEvolution(seed = null) {
@@ -703,71 +551,40 @@ function pauseEvolution() {
 }
 
 // ============================================================
-// SPECTRUM DOT HELPERS
-// ============================================================
-function activateDot(i) {
-    const dots = document.querySelectorAll('.spectrum-dot');
-    if (dots[i]) {
-        dots[i].classList.remove('rejected');
-        dots[i].classList.add('active');
-    }
-}
-
-function markDotRejected(i) {
-    const dots = document.querySelectorAll('.spectrum-dot');
-    if (dots[i]) {
-        dots[i].classList.remove('active');
-        dots[i].classList.add('rejected');
-        setTimeout(() => dots[i].classList.remove('rejected'), 2000);
-    }
-}
-
-function resetDots() {
-    document.querySelectorAll('.spectrum-dot').forEach(d => {
-        d.classList.remove('active', 'rejected');
-    });
-}
-
-// ============================================================
 // PERSISTENCE
 // ============================================================
-async function persistZeus(body, wordCount) {
+async function persistZeus(body, wordCount, cluster) {
     if (!db) return;
-    const label = `auto-chain-${Date.now()}`;
+    const label = `${cluster}-${Date.now()}`;
     const { error } = await db.from('zeus_entries').insert({
-        label, body, word_count: wordCount,
-        created_at: new Date().toISOString()
+        label, body, word_count: wordCount, created_at: new Date().toISOString()
     });
     if (error) {
-        printLine(`   ⚠ hoard save failed: ${error.message}`, 'system');
+        printLine(`   ⚠ save failed: ${error.message}`, 'sys');
     } else {
-        printLine(`   ✓ hoard saved → zeus_entries ["${label}"]`, 'system');
         chainStats.saved++;
+        printLine(`   ✓ hoard → zeus ["${label}"]`, 'sys');
     }
 }
 
-// Pull random Zeus entry from hoard for dream reseeding
 async function getHoardSeed() {
     if (!db) return null;
     try {
-        const { data, error } = await db
-            .from('zeus_entries')
-            .select('body')
-            .limit(20);
-        if (error || !data || data.length === 0) return null;
-        const entry = data[Math.floor(Math.random() * data.length)];
-        // Extract 2-3 words from a random position in the body
-        const words = entry.body.split(/\s+/).filter(w => w.length > 3);
-        if (words.length < 2) return null;
-        const pos = Math.floor(Math.random() * (words.length - 2));
-        return words.slice(pos, pos + 2)
-                    .map(w => w.replace(/[^a-zA-Z]/g, '').toLowerCase())
-                    .join(' ');
+        const { data, error } = await db.from('zeus_entries').select('body, label').limit(30);
+        if (error || !data || !data.length) return null;
+
+        const entry        = data[Math.floor(Math.random() * data.length)];
+        const labelCluster = CLUSTER_NAMES.find(c => entry.label.startsWith(c));
+        const cluster      = labelCluster || rand(CLUSTER_NAMES);
+        const clusterWords = CLUSTERS[cluster].words.filter(w => entry.body.toLowerCase().includes(w));
+        const words        = clusterWords.length >= 2 ? randN(clusterWords, 2) : randN(CLUSTERS[cluster].words, 2);
+
+        return { words, cluster };
     } catch { return null; }
 }
 
 // ============================================================
-// AWAKE / DREAM CYCLE
+// DREAM CYCLE
 // ============================================================
 let awakePulseCount = 0;
 let pulseInterval   = null;
@@ -781,11 +598,7 @@ function updateCounter() {
 function startAwakePulses() {
     if (pulseInterval) clearInterval(pulseInterval);
     pulseInterval = setInterval(() => {
-        if (!isDreaming) {
-            awakePulseCount++;
-            updateCounter();
-            if (awakePulseCount >= 30) enterDream();
-        }
+        if (!isDreaming) { awakePulseCount++; updateCounter(); if (awakePulseCount >= 30) enterDream(); }
     }, 1618);
 }
 
@@ -794,19 +607,18 @@ async function enterDream() {
     pauseEvolution();
     document.getElementById('statusLed').classList.add('dreaming');
     document.getElementById('stateLabel').textContent = 'DREAMING';
-    printLine('✨ Kairos sleeps. Reaching into the hoard…', null, false, true);
+    printLine('', null);
+    printLine('✦ dreaming — reaching into the hoard…', 'dream');
 
-    // Try to pull a seed from saved Zeus entries
     const seed = await getHoardSeed();
     if (seed) {
         dreamSeed = seed;
-        printLine(`   💭 fragment recovered: "${seed}"`, null, false, true);
+        printLine(`  fragment: "${seed.words.join(' ')}" · cluster: ${seed.cluster}`, 'dream');
     } else {
         dreamSeed = null;
-        printLine(`   💭 hoard empty — dreaming from void`, null, false, true);
+        printLine(`  hoard empty — dreaming from void`, 'dream');
     }
-
-    setTimeout(exitDream, 8000);
+    setTimeout(exitDream, 7000);
 }
 
 function exitDream() {
@@ -816,212 +628,226 @@ function exitDream() {
     document.getElementById('statusLed').classList.remove('dreaming');
     document.getElementById('stateLabel').textContent = 'AWAKE';
     if (dreamSeed) {
-        printLine(`💫 Kairos wakes. Seeding from hoard: "${dreamSeed}"`, null, false, true);
+        printLine(`✦ wakes · seeding from hoard · cluster: ${dreamSeed.cluster}`, 'dream');
     } else {
-        printLine('💫 Kairos wakes. Evolution resumes.', null, false, true);
+        printLine('✦ wakes · new chain begins', 'dream');
     }
+    printLine('', null);
     startEvolution(dreamSeed);
     dreamSeed = null;
 }
 
 // ============================================================
-// OUTPUT HELPER
+// SPECTRUM DOTS
 // ============================================================
-function printLine(text, cls = null, isEvolution = false, isDream = false, isThunder = false, isRejected = false) {
+function activateDot(i) {
+    const dots = document.querySelectorAll('.spectrum-dot');
+    if (dots[i]) { dots[i].classList.remove('rejected'); dots[i].classList.add('active'); }
+}
+function markDotRejected(i) {
+    const dots = document.querySelectorAll('.spectrum-dot');
+    if (dots[i]) {
+        dots[i].classList.remove('active');
+        dots[i].classList.add('rejected');
+        setTimeout(() => dots[i].classList.remove('rejected'), 2200);
+    }
+}
+function resetDots() {
+    document.querySelectorAll('.spectrum-dot').forEach(d => d.classList.remove('active','rejected'));
+}
+
+// ============================================================
+// OUTPUT
+// ============================================================
+function printLine(text, cls = null) {
     const output = document.getElementById('output');
     const line   = document.createElement('div');
     line.textContent = text;
 
-    if (cls && cls.startsWith('band-')) line.classList.add(cls);
-    else if (cls === 'gate-pass')       line.classList.add('gate-pass');
-    else if (cls === 'system')          line.classList.add('system');
-    else if (cls && DIVINE_BANDS[cls])  line.classList.add(`band-${cls}`);
-
-    if (isEvolution) line.classList.add('evolution');
-    if (isDream)     line.classList.add('dream');
-    if (isThunder)   line.classList.add('thunder');
-    if (isRejected)  line.classList.add('rejected-gate');
+    const direct = ['gate-pass','gate-fail','sys','sysdim','dream','zeus-full'];
+    if (cls && direct.includes(cls)) {
+        line.classList.add(cls);
+    } else if (cls && DIVINE_BANDS[cls]) {
+        line.classList.add(`band-${cls}`);
+    } else if (cls && cls.startsWith('band-')) {
+        line.classList.add(cls);
+    }
 
     output.appendChild(line);
     output.scrollTop = output.scrollHeight;
 }
 
 // ============================================================
-// CLASSIFIER — runs on any unrecognised input
+// CLASSIFIER — any unrecognised input
 // ============================================================
 function classifyInput(raw) {
-    const body      = raw.trim().replace(/[?!.]+$/, '').trim();
-    const words     = body.split(/\s+/);
-    const wordCount = words.length;
-    const band      = getBandFromWordCount(wordCount);
-    const bandInfo  = DIVINE_BANDS[band];
+    const body  = raw.trim().replace(/[?!.]+$/, '').trim();
+    const words = body.split(/\s+/).filter(Boolean);
+    const n     = words.length;
+    const band  = getBandFromWordCount(n);
+    const info  = DIVINE_BANDS[band];
 
-    printLine(`   words: ${wordCount} | band: ${bandInfo.icon} ${bandInfo.name} (${bandInfo.minWords}–${bandInfo.maxWords}w)`, 'system');
-
-    // Run the relevant gate check and report
-    if (band === 'hermes') {
-        printLine(`   ✓ seed eligible — no gate required`, 'gate-pass');
-    } else if (band === 'apollo') {
-        const capOk  = /^[A-Z]/.test(words[0]);
-        const endOk  = /[.!?]$/.test(raw.trim());
-        printLine(`   syntax: cap:${capOk?'✓':'✗'} end-punct:${endOk?'✓':'✗'}`, capOk && endOk ? 'gate-pass' : null);
-    } else if (band === 'hephaestus') {
-        const hasSubject = /^[A-Z]/.test(body);
-        const hasVerb    = VERBS.some(v => body.includes(` ${v} `) || body.startsWith(v));
-        const hasObject  = wordCount >= 8;
-        const inRange    = wordCount <= 15;
-        const passes     = hasSubject && hasVerb && hasObject && inRange;
-        printLine(
-            `   S-V-O gate: S:${hasSubject?'✓':'✗'} V:${hasVerb?'✓':'✗'} O:${hasObject?'✓':'✗'} range:${inRange?'✓':'✗'} → ${passes?'PASSES':'FAILS'}`,
-            passes ? 'gate-pass' : null
-        );
-        if (!passes) printLine(`   tip: start with a capitalised subject + active verb`, 'system');
-    } else if (band === 'demeter') {
-        printLine(`   ✓ phrase growth band — no hard gate`, 'gate-pass');
-    } else if (band === 'poseidon') {
-        printLine(`   ✓ depth band — no hard gate`, 'gate-pass');
-    } else if (band === 'athena' || band === 'zeus') {
-        const check = athenaGate({ body });
-        const bd    = check.breakdown;
-        printLine(
-            `   Athena wisdom: ${check.wisdomScore}% (need 70%) → ${check.passedGate ? 'PASSES' : 'FAILS'}`,
-            check.passedGate ? 'gate-pass' : null
-        );
-        printLine(`   ${bd.A} | ${bd.B} | ${bd.C} | ${bd.D} | ${bd.E}`, 'system');
+    // Detect cluster resonance
+    let detectedCluster = null;
+    for (const [name, cluster] of Object.entries(CLUSTERS)) {
+        const hits = cluster.words.filter(w => body.toLowerCase().includes(w));
+        if (hits.length > 0) { detectedCluster = { name, hits }; break; }
     }
 
-    printLine(`   → type "add <label>: ${body}" to save to hoard`, 'system');
+    printLine(`   ${n}w · ${info.icon} ${info.name} (${info.min}–${info.max}w)`, 'sys');
+    if (detectedCluster) {
+        printLine(`   cluster resonance: ${detectedCluster.name} · "${detectedCluster.hits.join(', ')}"`, 'sys');
+    }
+
+    if (band === 'hermes' || band === 'apollo') {
+        printLine(`   ✓ seed eligible · no gate`, 'gate-pass');
+    } else if (band === 'hephaestus') {
+        const hasS = /^[A-Z]/.test(body);
+        const hasV = VERBS.some(v => ` ${body} `.includes(` ${v} `));
+        const hasO = n >= 6;
+        const ok   = hasS && hasV && hasO;
+        printLine(`   S-V-O: S:${hasS?'✓':'✗'} V:${hasV?'✓':'✗'} O:${hasO?'✓':'✗'} → ${ok?'passes':'fails'}`, ok?'gate-pass':'gate-fail');
+        if (!ok) printLine(`   tip: capitalised subject + active verb + object`, 'sys');
+    } else if (band === 'demeter' || band === 'poseidon') {
+        printLine(`   ✓ depth band · no hard gate`, 'gate-pass');
+    } else if (band === 'athena' || band === 'zeus') {
+        const saved   = activeCluster;
+        activeCluster = detectedCluster ? detectedCluster.name : 'void';
+        const check   = athenaGate({ body });
+        activeCluster = saved;
+        const bd      = check.breakdown;
+        printLine(`   Athena: ${check.wisdomScore}% · ${bd.A} · ${bd.B} · ${bd.C} · ${bd.D} → ${check.passedGate?'passes':'fails'}`,
+            check.passedGate ? 'gate-pass' : 'gate-fail');
+    }
+    printLine(`   → "add <label>: ${body}" to save`, 'sysdim');
 }
 
 // ============================================================
 // COMMANDS
 // ============================================================
-const KNOWN_COMMANDS = ['help','clear','pause','resume','stats','add','view','hoard','seed'];
+const KNOWN_COMMANDS = ['help','clear','pause','resume','stats','add','view','hoard','seed','clusters'];
 
 const commands = {
-    help: () => `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DIVINE PIPELINE v4.2 — hoard persists · gates are real
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    help: () =>
+`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+KAIROS v4.3 · 64w cap · resonance engine
+no apis · structure + iteration + time
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+BANDS          WORDS    GATE
+─────────────────────────────────────────────
+✈️  Hermes      1–2      cluster seed
+☀️  Apollo      3–5      cluster syntax
+🔥  Hephaestus  6–10     S-V-O (rejects chain)
+🌾  Demeter     11–20    phrase growth
+🌊  Poseidon    21–35    depth expansion
+🦉  Athena      36–50    wisdom ≥ 70%
+⚡  Zeus        51–64    thunder · hard cap · saves
 
-BAND           WORDS     GATE
-─────────────────────────────────────────────────
-✈️  Hermes      1–3       seed (hoard-aware)
-☀️  Apollo      4–7       syntax
-🔥  Hephaestus  8–15      S-V-O (rejects chain)
-🌾  Demeter     16–31     phrase growth
-🌊  Poseidon    32–127    depth expansion
-🦉  Athena      128–255   wisdom ≥ 70% (real)
-⚡  Zeus        256–511   thunder · auto-saves
+COMMANDS
+  help · clear · pause · resume
+  stats · hoard · clusters
+  view <band> [n]       browse hoard entries
+  seed <words>          inject seed into chain
+  add <label>: <body>   save entry to hoard
 
-COMMANDS:
-  help                   this
-  clear                  clear output
-  pause / resume         evolution control
-  stats                  session + hoard stats
-  view <band> [n]        browse hoard by band
-  hoard                  show all band counts
-  seed <words>           manually seed next chain
-  add <label>: <body>    save entry to hoard
+NATURAL INPUT → classified by word count + gate
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
 
-NATURAL INPUT:
-  anything else → classified by word count + gate check
-  e.g. "what is this?" → words:3 | Hermes | seed eligible
+    clear:   () => { document.getElementById('output').innerHTML = ''; return null; },
+    pause:   () => { pauseEvolution(); return '⏸ paused'; },
+    resume:  () => { if (!evolutionActive) { startEvolution(); return '▶ resumed'; } return 'already running'; },
 
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
-
-    clear:  () => { document.getElementById('output').innerHTML = ''; return null; },
-    pause:  () => { pauseEvolution(); return '⏸ Evolution paused.'; },
-    resume: () => {
-        if (!evolutionActive) { startEvolution(); return '▶ Evolution resumed.'; }
-        return 'Already running.';
+    clusters: () => {
+        let out = `semantic clusters · chain gravity\n`;
+        for (const [name, c] of Object.entries(CLUSTERS)) {
+            out += `\n  ${name.padEnd(8)} ${c.words.slice(0,7).join(' · ')}`;
+        }
+        return out;
     },
 
     stats: async () => {
-        let hoarded = 0;
-        for (const band of BAND_ORDER) {
-            const { count } = await db.from(DIVINE_BANDS[band].table)
-                .select('*', { count: 'exact', head: true });
-            hoarded += (count || 0);
+        let total = 0;
+        for (const b of BAND_ORDER) {
+            const { count } = await db.from(DIVINE_BANDS[b].table).select('*',{count:'exact',head:true});
+            total += (count || 0);
         }
-        return `📊 Session
-  Chains completed : ${chainStats.runs}
-  Zeus entries saved: ${chainStats.saved}
-  Hep rejects      : ${chainStats.hepRejects}
-  Athena rejects   : ${chainStats.athenaRejects}
-  Total hoard size : ${hoarded} entries`;
+        return `session stats
+  chains completed : ${chainStats.runs}
+  zeus entries saved: ${chainStats.saved}
+  hephaestus rejects: ${chainStats.hepRejects}
+  athena rejects   : ${chainStats.athenaRejects}
+  total hoard size : ${total} entries`;
     },
 
     hoard: async () => {
-        let out = `🗄 Hoard\n`;
-        for (const band of BAND_ORDER) {
-            const info = DIVINE_BANDS[band];
-            const { count } = await db.from(info.table)
-                .select('*', { count: 'exact', head: true });
-            const bar = '█'.repeat(Math.min(count || 0, 20));
-            out += `  ${info.icon} ${info.name.padEnd(11)} ${String(count||0).padStart(4)}  ${bar}\n`;
+        let out = `🗄 hoard\n`;
+        for (const b of BAND_ORDER) {
+            const info = DIVINE_BANDS[b];
+            const { count } = await db.from(info.table).select('*',{count:'exact',head:true});
+            const n   = count || 0;
+            const bar = '█'.repeat(Math.min(n, 20));
+            out += `  ${info.icon} ${info.name.padEnd(12)} ${String(n).padStart(3)}  ${bar}\n`;
         }
         return out;
     },
 
     view: async (args) => {
         const band = args[0]?.toLowerCase();
-        const n    = parseInt(args[1]) || 3;
-        if (!band || !DIVINE_BANDS[band]) {
-            return `Usage: view <band> [n]\nBands: ${BAND_ORDER.join(', ')}`;
-        }
+        const n    = Math.min(parseInt(args[1]) || 3, 10);
+        if (!band || !DIVINE_BANDS[band])
+            return `usage: view <band> [n]\nbands: ${BAND_ORDER.join(', ')}`;
         const info = DIVINE_BANDS[band];
         const { data, error } = await db.from(info.table)
             .select('label, body, word_count, created_at')
             .order('created_at', { ascending: false })
-            .limit(Math.min(n, 10));
-        if (error) return `Error: ${error.message}`;
-        if (!data || data.length === 0) return `${info.icon} ${info.name} hoard is empty.`;
-        let out = `${info.icon} ${info.name} — ${data.length} recent entries\n`;
-        data.forEach((e, i) => {
-            const preview = e.body.length > 80 ? e.body.substring(0,80)+'…' : e.body;
-            out += `\n  [${i+1}] "${e.label}" (${e.word_count}w)\n      ${preview}\n`;
-        });
+            .limit(n);
+        if (error)                 return `error: ${error.message}`;
+        if (!data || !data.length) return `${info.icon} ${info.name} hoard empty`;
+        let out = `${info.icon} ${info.name} · ${data.length} recent\n`;
+        data.forEach((e,i) => { out += `\n[${i+1}] ${e.label} (${e.word_count}w)\n${e.body}\n`; });
         return out;
     },
 
     seed: (args, fullInput) => {
-        const seedWords = fullInput.replace(/^seed\s*/i, '').trim();
-        if (!seedWords) return 'Usage: seed <words>';
-        pauseEvolution();
-        printLine(`🌱 Manual seed: "${seedWords}"`, 'system');
-        startEvolution(seedWords);
-        return `▶ Chain seeded with: "${seedWords}"`;
+        const s = fullInput.replace(/^seed\s*/i,'').trim();
+        if (!s) return 'usage: seed <words>';
+        let cluster = null;
+        for (const [name, c] of Object.entries(CLUSTERS)) {
+            if (c.words.some(w => s.toLowerCase().includes(w))) { cluster = name; break; }
+        }
+        cluster     = cluster || rand(CLUSTER_NAMES);
+        const words = s.split(/\s+/).slice(0,2);
+        startEvolution({ words, cluster });
+        return `▶ seeded: "${words.join(' ')}" · cluster: ${cluster}`;
     },
 
     add: async (args, fullInput) => {
         const match = fullInput.match(/^add\s+([^:]+):\s*(.+)$/i);
-        if (!match) return 'Usage: add <label>: <body>';
-
-        const label     = match[1].trim();
-        const body      = match[2].trim();
-        const wordCount = body.split(/\s+/).length;
-        const band      = getBandFromWordCount(wordCount);
-        const bandInfo  = DIVINE_BANDS[band];
+        if (!match) return 'usage: add <label>: <body>';
+        const label = match[1].trim();
+        const body  = match[2].trim();
+        const n     = wc(body);
+        const band  = getBandFromWordCount(n);
+        const info  = DIVINE_BANDS[band];
 
         if (band === 'hephaestus') {
             const check = hephaestusGate({ body });
-            if (!check.passedGate) return `🔥 Hephaestus rejects "${label}" — no S-V-O.`;
+            if (!check.passedGate) return `🔥 Hephaestus rejects — no S-V-O`;
         }
         if (band === 'athena' || band === 'zeus') {
-            const check = athenaGate({ body });
-            if (!check.passedGate) {
-                return `🦉 Athena rejects "${label}" — ${check.wisdomScore}% (need 70%)\n` +
-                       `   ${check.breakdown.A} | ${check.breakdown.B} | ${check.breakdown.C} | ${check.breakdown.D} | ${check.breakdown.E}`;
-            }
+            const saved   = activeCluster;
+            activeCluster = 'void';
+            const check   = athenaGate({ body });
+            activeCluster = saved;
+            if (!check.passedGate)
+                return `🦉 Athena rejects ${check.wisdomScore}% · ${check.breakdown.A} · ${check.breakdown.B} · ${check.breakdown.C} · ${check.breakdown.D}`;
         }
-
-        const { error } = await db.from(bandInfo.table).insert({
-            label, body, word_count: wordCount,
-            created_at: new Date().toISOString()
+        const { error } = await db.from(info.table).insert({
+            label, body, word_count: n, created_at: new Date().toISOString()
         });
-        if (error) return `Error: ${error.message}`;
+        if (error) return `error: ${error.message}`;
         chainStats.saved++;
-        return `✓ "${label}" → ${bandInfo.icon} ${bandInfo.name} [${wordCount}w] saved to hoard`;
+        return `✓ "${label}" → ${info.icon} ${info.name} [${n}w]`;
     }
 };
 
@@ -1032,25 +858,15 @@ async function processCommand(input) {
     if (!input.trim()) return;
     awakePulseCount = 0;
     updateCounter();
-
     const parts = input.trim().split(/\s+/);
     const cmd   = parts[0].toLowerCase();
     const args  = parts.slice(1);
-
-    // Known commands
-    if (cmd === 'add' || cmd === 'seed') {
-        const result = await commands[cmd](args, input);
-        if (result) printLine(result);
-        return;
-    }
 
     if (KNOWN_COMMANDS.includes(cmd)) {
         const result = await commands[cmd](args, input);
         if (result) printLine(result);
         return;
     }
-
-    // Unknown input → classify it
     classifyInput(input);
 }
 
@@ -1059,36 +875,26 @@ async function processCommand(input) {
 // ============================================================
 window.addEventListener('DOMContentLoaded', async () => {
     const input = document.getElementById('command');
-
-    if (!window.supabase) {
-        printLine('ERROR: Supabase not loaded.');
-        return;
-    }
-
+    if (!window.supabase) { printLine('ERROR: Supabase not loaded'); return; }
     db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    printLine('⚡ KAIROS TERMINAL v4.2 — Divine Pipeline');
-    printLine('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
-    printLine('✓ Supabase connected', 'system');
-    printLine('✓ 7 Gods | 7 Tables | 511 word hard cap', 'system');
-    printLine('✓ Zeus completions auto-save to hoard', 'system');
-    printLine('✓ Dreams reseed from hoard fragments', 'system');
-    printLine('✓ Any input classified by band + gate', 'system');
-    printLine('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'system');
-    printLine('');
-    printLine('type anything to classify it. type help for commands.', 'system');
+    printLine('⚡ KAIROS TERMINAL v4.3', 'sys');
+    printLine('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'sysdim');
+    printLine('no apis · structure + iteration + time', 'sys');
+    printLine('7 clusters · 64w zeus cap · hoard persists', 'sys');
+    printLine('gates are real · dreams reseed from memory', 'sys');
+    printLine('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'sysdim');
     printLine('');
 
     startEvolution();
     startAwakePulses();
 
-    // Input handling
     input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             e.preventDefault();
             const val = input.value.trim();
             if (val) {
-                printLine(`➜ ${val}`, 'system');
+                printLine(`➜ ${val}`, 'sys');
                 processCommand(val);
                 commandHistory.push(val);
                 historyIndex = commandHistory.length;
@@ -1103,9 +909,7 @@ window.addEventListener('DOMContentLoaded', async () => {
             e.preventDefault();
             if (historyIndex < commandHistory.length - 1) {
                 historyIndex++; input.value = commandHistory[historyIndex];
-            } else {
-                historyIndex = commandHistory.length; input.value = '';
-            }
+            } else { historyIndex = commandHistory.length; input.value = ''; }
         }
     });
 
