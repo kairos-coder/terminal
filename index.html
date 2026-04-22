@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kairos Terminal · Rainbow Road · v2.4</title>
+  <title>Kairos Terminal · Divine Classification · v2.5</title>
   <style>
     * {
       margin: 0;
@@ -17,27 +17,25 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', 'Courier New', monospace;
-      padding: 1.5rem;
+      font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+      padding: 1rem;
     }
 
-    .kairos-terminal {
+    .terminal {
       background-color: #0b0e14;
       border: 1px solid #2a2f3f;
       border-radius: 12px;
-      box-shadow: 0 20px 35px -12px rgba(0,0,0,0.8);
       width: 100%;
-      max-width: 1200px;
-      height: 85vh;
-      min-height: 520px;
+      max-width: 1100px;
+      height: 90vh;
+      min-height: 600px;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      transition: border-color 0.3s, box-shadow 0.3s;
     }
 
     .terminal-header {
-      padding: 0.9rem 1.4rem;
+      padding: 0.75rem 1.2rem;
       background: #07090e;
       border-bottom: 1px solid #1e232e;
       display: flex;
@@ -47,10 +45,8 @@
       gap: 0.5rem;
     }
 
-    .node-badge {
+    .badge {
       color: #6c8b9f;
-      font-weight: 500;
-      text-transform: uppercase;
       font-size: 0.7rem;
       background: #10131c;
       padding: 0.2rem 0.7rem;
@@ -58,19 +54,19 @@
       border-left: 2px solid #3e6b8c;
     }
 
-    .spectrum-indicator {
+    .spectrum {
       display: flex;
-      gap: 0.25rem;
+      gap: 0.2rem;
       align-items: center;
     }
 
     .spectrum-dot {
-      width: 12px;
-      height: 12px;
+      width: 10px;
+      height: 10px;
       border-radius: 2px;
     }
 
-    .status-led {
+    .status {
       display: flex;
       align-items: center;
       gap: 0.5rem;
@@ -79,73 +75,43 @@
     }
 
     .led {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background-color: #2ecc71;
-      box-shadow: 0 0 6px #2ecc71;
-      animation: pulse 2s infinite;
-    }
-
-    .pulse-led {
       width: 8px;
       height: 8px;
       border-radius: 50%;
-      background-color: #f39c12;
-      box-shadow: 0 0 4px #f39c12;
-      animation: goldenPulse 1.618s infinite;
-    }
-
-    @keyframes goldenPulse {
-      0% { opacity: 0.3; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.2); background-color: #e74c3c; }
-      100% { opacity: 0.3; transform: scale(1); }
+      background-color: #2ecc71;
+      box-shadow: 0 0 4px #2ecc71;
+      animation: pulse 2s infinite;
     }
 
     @keyframes pulse {
-      0% { opacity: 0.5; }
-      100% { opacity: 1; }
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
     }
 
-    .terminal-output {
+    .output {
       flex: 1;
       overflow-y: auto;
-      padding: 1.2rem;
-      font-family: monospace;
+      padding: 1rem;
       font-size: 0.85rem;
       line-height: 1.5;
       color: #d4e0ed;
       background: #0a0d14;
     }
 
-    .terminal-output div {
+    .output div {
       white-space: pre-wrap;
       word-break: break-word;
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.2rem;
     }
 
-    /* Olympian band styles with brainwave colors */
-    .band-hermes { color: #e8a87c; border-left: 3px solid #e8a87c; padding-left: 0.5rem; margin: 0.25rem 0; }
-    .band-apollo { color: #f4d03f; border-left: 3px solid #f4d03f; padding-left: 0.5rem; margin: 0.25rem 0; }
-    .band-hephaestus { color: #d45500; border-left: 3px solid #d45500; padding-left: 0.5rem; margin: 0.25rem 0; }
-    .band-demeter { color: #6b8e23; border-left: 3px solid #6b8e23; padding-left: 0.5rem; margin: 0.25rem 0; }
-    .band-poseidon { color: #2c6e9e; border-left: 3px solid #2c6e9e; padding-left: 0.5rem; margin: 0.25rem 0; }
-    .band-athena { color: #8e44ad; border-left: 3px solid #8e44ad; padding-left: 0.5rem; margin: 0.25rem 0; }
-    .band-zeus { color: #9b59b6; border-left: 3px solid #9b59b6; padding-left: 0.5rem; margin: 0.25rem 0; text-shadow: 0 0 3px #9b59b6; }
-
-    .pulse-message { opacity: 0.8; font-style: italic; animation: fadeIn 0.5s ease-in; }
-    .synthesis-message { animation: glowPulse 1s ease-in-out; }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateX(-10px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-
-    @keyframes glowPulse {
-      0% { opacity: 0; text-shadow: 0 0 0px currentColor; }
-      50% { opacity: 1; text-shadow: 0 0 8px currentColor; }
-      100% { opacity: 1; text-shadow: 0 0 0px currentColor; }
-    }
+    /* Divine band colors */
+    .band-hermes { color: #e8a87c; border-left: 2px solid #e8a87c; padding-left: 0.5rem; margin: 0.2rem 0; }
+    .band-apollo { color: #f4d03f; border-left: 2px solid #f4d03f; padding-left: 0.5rem; margin: 0.2rem 0; }
+    .band-hephaestus { color: #d45500; border-left: 2px solid #d45500; padding-left: 0.5rem; margin: 0.2rem 0; }
+    .band-demeter { color: #6b8e23; border-left: 2px solid #6b8e23; padding-left: 0.5rem; margin: 0.2rem 0; }
+    .band-poseidon { color: #2c6e9e; border-left: 2px solid #2c6e9e; padding-left: 0.5rem; margin: 0.2rem 0; }
+    .band-athena { color: #8e44ad; border-left: 2px solid #8e44ad; padding-left: 0.5rem; margin: 0.2rem 0; }
+    .band-zeus { color: #9b59b6; border-left: 2px solid #9b59b6; padding-left: 0.5rem; margin: 0.2rem 0; text-shadow: 0 0 1px #9b59b6; }
 
     .input-line {
       display: flex;
@@ -153,10 +119,10 @@
       gap: 0.5rem;
       background: #06080e;
       border-top: 1px solid #1a1f2a;
-      padding: 0.8rem 1.2rem;
+      padding: 0.7rem 1rem;
     }
 
-    .prompt-symbol {
+    .prompt {
       color: #7aa2c7;
       font-weight: 600;
     }
@@ -166,75 +132,76 @@
       background: transparent;
       border: none;
       color: #eaf2ff;
-      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-family: inherit;
       font-size: 0.9rem;
       outline: none;
-      padding: 0.3rem 0;
+      padding: 0.2rem 0;
     }
 
-    .footer-hint {
+    .footer {
       background: #03050780;
       font-size: 0.65rem;
-      text-align: center;
-      padding: 0.35rem;
+      padding: 0.3rem 1rem;
       color: #4b5e77;
       border-top: 1px solid #141a24;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
       gap: 0.5rem;
+      flex-wrap: wrap;
     }
 
-    .audio-toggle {
-      cursor: pointer;
-      padding: 0 0.5rem;
-      border-radius: 10px;
-      background: #1a1f2a;
-      font-size: 0.6rem;
+    /* Help table formatting */
+    .help-grid {
+      display: grid;
+      grid-template-columns: auto auto auto auto auto;
+      gap: 0.25rem 1rem;
+      margin: 0.5rem 0;
+    }
+    .help-header {
+      font-weight: bold;
+      color: #7aa2c7;
+      border-bottom: 1px solid #2a2f3f;
+      padding-bottom: 0.2rem;
+      margin-bottom: 0.2rem;
     }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
-<div class="kairos-terminal" id="terminalContainer">
+<div class="terminal">
   <div class="terminal-header">
-    <div class="node-badge">
-      <span>⚡ KERNEL NODE #1</span> <strong>· RAINBOW ROAD v2.4</strong>
+    <div class="badge">⚡ KERNEL NODE #1 · DIVINE CLASSIFICATION v2.5</div>
+    <div class="spectrum">
+      <div class="spectrum-dot" style="background:#e8a87c"></div>
+      <div class="spectrum-dot" style="background:#f4d03f"></div>
+      <div class="spectrum-dot" style="background:#d45500"></div>
+      <div class="spectrum-dot" style="background:#6b8e23"></div>
+      <div class="spectrum-dot" style="background:#2c6e9e"></div>
+      <div class="spectrum-dot" style="background:#8e44ad"></div>
+      <div class="spectrum-dot" style="background:#9b59b6"></div>
+      <span style="font-size:0.6rem">IR → UV</span>
     </div>
-    <div class="spectrum-indicator">
-      <div class="spectrum-dot" style="background: #e8a87c;"></div>
-      <div class="spectrum-dot" style="background: #f4d03f;"></div>
-      <div class="spectrum-dot" style="background: #d45500;"></div>
-      <div class="spectrum-dot" style="background: #6b8e23;"></div>
-      <div class="spectrum-dot" style="background: #2c6e9e;"></div>
-      <div class="spectrum-dot" style="background: #8e44ad;"></div>
-      <div class="spectrum-dot" style="background: #9b59b6;"></div>
-      <span style="font-size: 0.6rem;">θ → γ</span>
-    </div>
-    <div class="status-led">
-      <span class="pulse-led"></span>
-      <span>φ = 1.618s</span>
+    <div class="status">
       <span class="led"></span>
       <span>supabase</span>
     </div>
   </div>
 
-  <div id="terminal" class="terminal-output">
-    <div>Kairos Terminal v2.4 - Rainbow Road of Memory</div>
-    <div>Brainwave spectrum: θ (4-8Hz) → α → β → γ (40-100Hz)</div>
-    <div>Type 'rainbow' to see the spectrum | 'sing' to hear the frequencies</div>
+  <div id="output" class="output">
+    <div>Kairos Terminal v2.5 — Divine Classification</div>
+    <div>Word count determines divine band. Type 'help' for commands.</div>
     <div>&nbsp;</div>
   </div>
 
   <div class="input-line">
-    <span class="prompt-symbol">➜</span>
-    <input type="text" id="command" placeholder="type 'help' | 'rainbow' | 'sing' | add label: body" autofocus spellcheck="false" autocomplete="off">
+    <span class="prompt">➜</span>
+    <input type="text" id="command" placeholder="add label: body | help | list" autofocus spellcheck="false" autocomplete="off">
   </div>
-  <div class="footer-hint">
-    <span>📜 commands: help, rainbow, sing, list, add, search, weave, forgotten, spectrum, stats</span>
-    <span id="pulseStatus">❤️ φ-beat active</span>
-    <span class="audio-toggle" id="audioToggle">🔊 audio off</span>
+
+  <div class="footer">
+    <span>🏛️ 7 Divine Bands · Word Count = Complexity · Frequency = Tag</span>
+    <span id="statusText">● ready</span>
   </div>
 </div>
 
@@ -243,59 +210,82 @@ const SUPABASE_URL = 'https://kzcucjcyxybypncbdbws.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_saeUHGocDah-T2_709M6Fg_g26JtLXw';
 
 let db = null;
-const commands = {};
 let commandHistory = [];
 let historyIndex = -1;
 
-// Audio context
-let audioContext = null;
-let audioEnabled = false;
-
 // ===============================
-// OLYMPIAN BANDS CONFIGURATION
+// DIVINE BANDS CONFIGURATION
 // ===============================
-const OLYMPIAN_BANDS = {
-    'hermes': { 
-        index: 1, display: '✈️ Hermes', light: 'infrared', color: '#e8a87c', 
-        wordRange: [1, 10], brainwave: 'theta', freqRange: [4, 8],
-        icon: '✈️', state: 'Dreaming, Threshold',
-        filler: ['swift', 'threshold', 'message', 'wing', 'crossing', 'caduceus']
+const DIVINE_BANDS = {
+    'hermes': {
+        index: 1,
+        icon: '✈️',
+        name: 'Hermes',
+        words: '1-10',
+        freq: '4-8 Hz',
+        light: 'Infrared',
+        domain: 'Messages, Thresholds',
+        color: '#e8a87c'
     },
-    'apollo': { 
-        index: 2, display: '☀️ Apollo', light: 'sun_gold', color: '#f4d03f',
-        wordRange: [11, 30], brainwave: 'alpha', freqRange: [8, 12],
-        icon: '☀️', state: 'Calm, Truth, Light',
-        filler: ['light', 'truth', 'oracle', 'sun', 'prophecy', 'radiant', 'lyre']
+    'apollo': {
+        index: 2,
+        icon: '☀️',
+        name: 'Apollo',
+        words: '11-30',
+        freq: '8-12 Hz',
+        light: 'Sun Gold',
+        domain: 'Truth, Oracles',
+        color: '#f4d03f'
     },
-    'hephaestus': { 
-        index: 3, display: '🔥 Hephaestus', light: 'orange', color: '#d45500',
-        wordRange: [31, 60], brainwave: 'beta_low', freqRange: [12, 15],
-        icon: '🔥', state: 'Focused, Forging',
-        filler: ['forge', 'hammer', 'anvil', 'fire', 'craft', 'metal', 'bellows']
+    'hephaestus': {
+        index: 3,
+        icon: '🔥',
+        name: 'Hephaestus',
+        words: '31-60',
+        freq: '12-15 Hz',
+        light: 'Orange',
+        domain: 'Forge, Craft',
+        color: '#d45500'
     },
-    'demeter': { 
-        index: 4, display: '🌾 Demeter', light: 'green', color: '#6b8e23',
-        wordRange: [61, 100], brainwave: 'beta_mid', freqRange: [15, 20],
-        icon: '🌾', state: 'Active, Growing',
-        filler: ['harvest', 'seed', 'grain', 'season', 'earth', 'growth', 'nurture']
+    'demeter': {
+        index: 4,
+        icon: '🌾',
+        name: 'Demeter',
+        words: '61-100',
+        freq: '15-20 Hz',
+        light: 'Green',
+        domain: 'Growth, Harvest',
+        color: '#6b8e23'
     },
-    'poseidon': { 
-        index: 5, display: '🌊 Poseidon', light: 'blue', color: '#2c6e9e',
-        wordRange: [101, 150], brainwave: 'beta_high', freqRange: [20, 30],
-        icon: '🌊', state: 'Alert, Flowing',
-        filler: ['depth', 'wave', 'current', 'tide', 'abyss', 'trident', 'ocean']
+    'poseidon': {
+        index: 5,
+        icon: '🌊',
+        name: 'Poseidon',
+        words: '101-150',
+        freq: '20-30 Hz',
+        light: 'Blue',
+        domain: 'Depth, Flow',
+        color: '#2c6e9e'
     },
-    'athena': { 
-        index: 6, display: '🦉 Athena', light: 'purple', color: '#8e44ad',
-        wordRange: [151, 220], brainwave: 'gamma', freqRange: [30, 40],
-        icon: '🦉', state: 'Weaving, Wisdom',
-        filler: ['weave', 'strategy', 'wisdom', 'owl', 'tapestry', 'olive', 'aegis']
+    'athena': {
+        index: 6,
+        icon: '🦉',
+        name: 'Athena',
+        words: '151-220',
+        freq: '30-40 Hz',
+        light: 'Purple',
+        domain: 'Wisdom, Weaving',
+        color: '#8e44ad'
     },
-    'zeus': { 
-        index: 7, display: '⚡ Zeus', light: 'ultraviolet', color: '#9b59b6',
-        wordRange: [221, 300], brainwave: 'gamma_high', freqRange: [40, 100],
-        icon: '⚡', state: 'Transcendence, Thunder',
-        filler: ['thunder', 'lightning', 'fate', 'king', 'eagle', 'storm', 'olympus']
+    'zeus': {
+        index: 7,
+        icon: '⚡',
+        name: 'Zeus',
+        words: '221-300',
+        freq: '40-100 Hz',
+        light: 'Ultraviolet',
+        domain: 'Thunder, Fate',
+        color: '#9b59b6'
     }
 };
 
@@ -309,90 +299,286 @@ function getBandFromWordCount(wordCount) {
     return 'zeus';
 }
 
+function getFrequencyFromBand(band) {
+    const ranges = {
+        hermes: [4, 8],
+        apollo: [8, 12],
+        hephaestus: [12, 15],
+        demeter: [15, 20],
+        poseidon: [20, 30],
+        athena: [30, 40],
+        zeus: [40, 100]
+    };
+    const range = ranges[band];
+    if (!range) return 10;
+    return (range[0] + range[1]) / 2;
+}
+
 function printLine(text, band = null) {
-    const terminal = document.getElementById('terminal');
+    const output = document.getElementById('output');
     const line = document.createElement('div');
     line.textContent = text;
-    if (band && OLYMPIAN_BANDS[band]) {
+    if (band && DIVINE_BANDS[band]) {
         line.classList.add(`band-${band}`);
     }
-    terminal.appendChild(line);
-    terminal.scrollTop = terminal.scrollHeight;
+    output.appendChild(line);
+    output.scrollTop = output.scrollHeight;
 }
 
-// ===============================
-// AUDIO ENGINE (Brainwave Synthesis)
-// ===============================
-function initAudio() {
-    if (!audioContext) {
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+function parseAddCommand(input) {
+    // Format: add label: body
+    const match = input.match(/^add\s+([^:]+):\s*(.+)$/i);
+    if (match) {
+        return { label: match[1].trim(), body: match[2].trim() };
     }
-}
-
-function playBrainwave(frequencyHz, band, duration = 1.2) {
-    if (!audioEnabled || !audioContext) return;
-    
-    // Resume if suspended
-    if (audioContext.state === 'suspended') {
-        audioContext.resume();
-    }
-    
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.type = 'sine';
-    oscillator.frequency.value = frequencyHz;
-    
-    gainNode.gain.value = 0.08;
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    oscillator.start();
-    
-    gainNode.gain.exponentialRampToValueAtTime(0.00001, audioContext.currentTime + duration);
-    oscillator.stop(audioContext.currentTime + duration);
-    
-    // Visual flash
-    const container = document.getElementById('terminalContainer');
-    const bandConfig = OLYMPIAN_BANDS[band];
-    if (bandConfig) {
-        container.style.borderColor = bandConfig.color;
-        container.style.boxShadow = `0 0 20px ${bandConfig.color}`;
-        setTimeout(() => {
-            container.style.borderColor = '';
-            container.style.boxShadow = '';
-        }, duration * 1000);
-    }
-}
-
-function playScale() {
-    const bands = ['hermes', 'apollo', 'hephaestus', 'demeter', 'poseidon', 'athena', 'zeus'];
-    let delay = 0;
-    
-    bands.forEach((band, i) => {
-        const config = OLYMPIAN_BANDS[band];
-        const freq = (config.freqRange[0] + config.freqRange[1]) / 2;
-        
-        setTimeout(() => {
-            playBrainwave(freq, band, 1.0);
-        }, delay);
-        delay += 1000;
-    });
-}
-
-// ===============================
-// NATURAL LANGUAGE INSERT
-// ===============================
-function parseNaturalInsert(input) {
-    let match = input.match(/^add\s+([^:]+):\s*(.+)$/i);
-    if (match) return { label: match[1].trim(), body: match[2].trim() };
-    match = input.match(/^new\s+([^|]+)\|\s*(.+)$/i);
-    if (match) return { label: match[1].trim(), body: match[2].trim() };
-    match = input.match(/^remember\s+([^:]+):\s*(.+)$/i);
-    if (match) return { label: match[1].trim(), body: match[2].trim() };
     return null;
 }
+
+// ===============================
+// COMMAND HANDLERS
+// ===============================
+
+const commands = {};
+
+commands.help = async () => {
+    return `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                  DIVINE CLASSIFICATION
+         Word Count = Complexity | Frequency = Tag
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ${'BAND'.padEnd(12)} ${'WORDS'.padEnd(8)} ${'FREQUENCY'.padEnd(10)} ${'LIGHT'.padEnd(12)} ${'DOMAIN'}
+  ─────────────────────────────────────────────────────────
+  ${'✈️ Hermes'.padEnd(12)} ${'1-10'.padEnd(8)} ${'4-8 Hz'.padEnd(10)} ${'Infrared'.padEnd(12)} ${'Messages, Thresholds'}
+  ${'☀️ Apollo'.padEnd(12)} ${'11-30'.padEnd(8)} ${'8-12 Hz'.padEnd(10)} ${'Sun Gold'.padEnd(12)} ${'Truth, Oracles'}
+  ${'🔥 Hephaestus'.padEnd(12)} ${'31-60'.padEnd(8)} ${'12-15 Hz'.padEnd(10)} ${'Orange'.padEnd(12)} ${'Forge, Craft'}
+  ${'🌾 Demeter'.padEnd(12)} ${'61-100'.padEnd(8)} ${'15-20 Hz'.padEnd(10)} ${'Green'.padEnd(12)} ${'Growth, Harvest'}
+  ${'🌊 Poseidon'.padEnd(12)} ${'101-150'.padEnd(8)} ${'20-30 Hz'.padEnd(10)} ${'Blue'.padEnd(12)} ${'Depth, Flow'}
+  ${'🦉 Athena'.padEnd(12)} ${'151-220'.padEnd(8)} ${'30-40 Hz'.padEnd(10)} ${'Purple'.padEnd(12)} ${'Wisdom, Weaving'}
+  ${'⚡ Zeus'.padEnd(12)} ${'221-300'.padEnd(8)} ${'40-100 Hz'.padEnd(10)} ${'Ultraviolet'.padEnd(12)} ${'Thunder, Fate'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 CREATE:
+  add <label>: <body>     - Entry auto-classified by word count
+
+📖 READ:
+  list [page]             - List entries with band & frequency
+  random                  - Get random entry
+  search <text>           - Search by label or body
+  weave <label>           - Show connections
+  forgotten               - Show entries with no relationships
+
+📊 ANALYZE:
+  spectrum                - Show distribution across divine bands
+  stats                   - Database statistics
+
+🧹 UTILITIES:
+  clear                   - Clear terminal output
+  help                    - Show this message
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+💡 THE RULE: Word count determines the divine band.
+   Higher word count = Higher frequency = Closer to Zeus.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+};
+
+commands.clear = async () => {
+    document.getElementById('output').innerHTML = '';
+    return null;
+};
+
+commands.add = async (args, fullInput) => {
+    // This is handled in processCommand, but keeping for consistency
+    return null;
+};
+
+commands.list = async (args) => {
+    let page = 1;
+    let limit = 15;
+    
+    if (args.length > 0 && !isNaN(parseInt(args[0]))) {
+        page = parseInt(args[0]);
+    }
+    
+    const offset = (page - 1) * limit;
+    
+    const { count, error: countError } = await db
+        .from('terminal_entries')
+        .select('*', { count: 'exact', head: true });
+    
+    if (countError) return `Error: ${countError.message}`;
+    if (count === 0) return 'No entries found. Use "add label: body" to create one.';
+    
+    const totalPages = Math.ceil(count / limit);
+    if (page > totalPages) return `Page ${page} doesn't exist. Total pages: ${totalPages}.`;
+    
+    const { data, error } = await db
+        .from('terminal_entries')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+    
+    if (error) return `Error: ${error.message}`;
+    
+    let output = `📋 Page ${page}/${totalPages} (${count} total entries):\n\n`;
+    
+    for (let i = 0; i < data.length; i++) {
+        const entry = data[i];
+        const wordCount = entry.word_count || entry.body.split(/\s+/).length;
+        const band = entry.divine_band || getBandFromWordCount(wordCount);
+        const bandInfo = DIVINE_BANDS[band];
+        const freq = entry.frequency_hz || getFrequencyFromBand(band);
+        const num = offset + i + 1;
+        const preview = entry.body.substring(0, 55) + (entry.body.length > 55 ? '...' : '');
+        
+        output += `${num}. ${bandInfo.icon} ${entry.label} [${freq.toFixed(1)}Hz | ${bandInfo.light}]\n   ${preview}\n\n`;
+    }
+    
+    return output;
+};
+
+commands.random = async () => {
+    const { data, error } = await db.from('terminal_entries').select('*');
+    if (error) return `Error: ${error.message}`;
+    if (!data || data.length === 0) return 'No entries found.';
+    
+    const random = data[Math.floor(Math.random() * data.length)];
+    const wordCount = random.word_count || random.body.split(/\s+/).length;
+    const band = random.divine_band || getBandFromWordCount(wordCount);
+    const bandInfo = DIVINE_BANDS[band];
+    const freq = random.frequency_hz || getFrequencyFromBand(band);
+    
+    return `${bandInfo.icon} Random Entry [${freq.toFixed(1)}Hz | ${bandInfo.light}]:\nLabel: ${random.label}\nBody: ${random.body}\nWords: ${wordCount}\nCreated: ${random.created_at}`;
+};
+
+commands.search = async (args) => {
+    const searchTerm = args.join(' ');
+    if (!searchTerm) return 'Usage: search <text>';
+    
+    const { data, error } = await db
+        .from('terminal_entries')
+        .select('*')
+        .or(`label.ilike.%${searchTerm}%,body.ilike.%${searchTerm}%`)
+        .limit(30);
+    
+    if (error) return `Error: ${error.message}`;
+    if (!data || data.length === 0) return `No matches found for "${searchTerm}"`;
+    
+    let output = `🔍 Found ${data.length} matches:\n\n`;
+    for (const entry of data) {
+        const wordCount = entry.word_count || entry.body.split(/\s+/).length;
+        const band = entry.divine_band || getBandFromWordCount(wordCount);
+        const bandInfo = DIVINE_BANDS[band];
+        const freq = entry.frequency_hz || getFrequencyFromBand(band);
+        output += `${bandInfo.icon} ${entry.label} [${freq.toFixed(1)}Hz] — ${entry.body.substring(0, 60)}${entry.body.length > 60 ? '...' : ''}\n`;
+    }
+    return output;
+};
+
+commands.spectrum = async () => {
+    const { data, error } = await db.from('terminal_entries').select('word_count, divine_band');
+    if (error) return `Error: ${error.message}`;
+    
+    const counts = {
+        hermes: 0, apollo: 0, hephaestus: 0,
+        demeter: 0, poseidon: 0, athena: 0, zeus: 0
+    };
+    
+    for (const entry of data) {
+        const wordCount = entry.word_count || 1;
+        const band = entry.divine_band || getBandFromWordCount(wordCount);
+        if (counts[band] !== undefined) counts[band]++;
+    }
+    
+    let output = `🌈 DIVINE SPECTRUM\n\n`;
+    for (const [band, count] of Object.entries(counts)) {
+        const info = DIVINE_BANDS[band];
+        const barLength = Math.min(count, 30);
+        const bar = '█'.repeat(barLength);
+        const empty = '░'.repeat(30 - barLength);
+        output += `${info.icon} ${info.name.padEnd(10)} ${info.freq.padEnd(8)} ${bar}${empty} ${count} entries\n`;
+    }
+    
+    const total = data.length;
+    output += `\n📊 Total: ${total} entries classified across 7 divine bands.`;
+    return output;
+};
+
+commands.stats = async () => {
+    const { count, error } = await db.from('terminal_entries').select('*', { count: 'exact', head: true });
+    if (error) return `Error: ${error.message}`;
+    
+    return `📊 Database Statistics\n\nTerminal Entries: ${count}\nDivine Bands: 7 (Hermes → Zeus)\nClassification: Word count determines frequency tag\n\nType "spectrum" to see distribution across bands.`;
+};
+
+commands.forgotten = async () => {
+    try {
+        const { data: entries, error: entriesError } = await db.from('terminal_entries').select('id, label, body, word_count');
+        if (entriesError) return `Error: ${entriesError.message}`;
+        if (!entries || entries.length === 0) return 'No entries found.';
+        
+        const { data: relations, error: relError } = await db.from('terminal_relationships').select('source_id');
+        if (relError && !relError.message.includes('does not exist')) {
+            return `Error checking relationships: ${relError.message}`;
+        }
+        
+        const usedIds = new Set((relations || []).map(r => r.source_id));
+        const forgotten = entries.filter(e => !usedIds.has(e.id));
+        
+        if (forgotten.length === 0) return 'No forgotten entries found. All entries have connections.';
+        
+        let output = `🌑 Forgotten Entries (${forgotten.length}):\n\n`;
+        for (const entry of forgotten.slice(0, 20)) {
+            const wordCount = entry.word_count || entry.body.split(/\s+/).length;
+            const band = getBandFromWordCount(wordCount);
+            const info = DIVINE_BANDS[band];
+            output += `${info.icon} ${entry.label} [${info.freq}] — ${entry.body.substring(0, 50)}${entry.body.length > 50 ? '...' : ''}\n`;
+        }
+        if (forgotten.length > 20) output += `\n... and ${forgotten.length - 20} more.`;
+        return output;
+    } catch (err) {
+        return `Error: ${err.message}`;
+    }
+};
+
+commands.weave = async (args) => {
+    if (args.length === 0) return 'Usage: weave <label>';
+    const label = args[0];
+    
+    try {
+        const { data: entry, error: entryError } = await db
+            .from('terminal_entries')
+            .select('id, label')
+            .eq('label', label)
+            .single();
+        
+        if (entryError) return `Entry not found: ${label}`;
+        
+        const { data: rel, error: relError } = await db
+            .from('terminal_relationships')
+            .select('target_id, type')
+            .eq('source_id', entry.id);
+        
+        if (relError) return `Error: ${relError.message}`;
+        if (!rel || rel.length === 0) return `No connections found for "${label}".`;
+        
+        const targetIds = rel.map(r => r.target_id);
+        const { data: targets, error: targetsError } = await db
+            .from('terminal_entries')
+            .select('label')
+            .in('id', targetIds);
+        
+        if (targetsError) return `Error: ${targetsError.message}`;
+        
+        let output = `🔗 Connections from "${label}":\n`;
+        for (let i = 0; i < targets.length; i++) {
+            output += `  → ${targets[i].label} (${rel[i].type})\n`;
+        }
+        return output;
+    } catch (err) {
+        return `Error: ${err.message}`;
+    }
+};
 
 // ===============================
 // PROCESS COMMAND
@@ -400,30 +586,30 @@ function parseNaturalInsert(input) {
 async function processCommand(input) {
     if (!input.trim()) return;
     
-    // Check natural language insert
-    const naturalInsert = parseNaturalInsert(input);
-    if (naturalInsert) {
-        const wordCount = naturalInsert.body.split(/\s+/).length;
+    // Check for add command
+    const addMatch = parseAddCommand(input);
+    if (addMatch) {
+        const { label, body } = addMatch;
+        const wordCount = body.split(/\s+/).length;
         const band = getBandFromWordCount(wordCount);
-        const bandInfo = OLYMPIAN_BANDS[band];
+        const bandInfo = DIVINE_BANDS[band];
+        const frequency = getFrequencyFromBand(band);
         
         const entry = {
-            label: naturalInsert.label,
-            body: naturalInsert.body,
+            label: label,
+            body: body,
             word_count: wordCount,
-            olympian_band: band,
-            divine_color: bandInfo.color,
-            brainwave_band: bandInfo.brainwave,
-            light_wavelength: bandInfo.light,
-            frequency_hz: (bandInfo.freqRange[0] + bandInfo.freqRange[1]) / 2
+            divine_band: band,
+            frequency_hz: frequency,
+            light_wavelength: bandInfo.light.toLowerCase().replace(' ', '_')
         };
         
         const { error } = await db.from('terminal_entries').insert(entry);
         if (error) {
             printLine(`Error: ${error.message}`);
         } else {
-            printLine(`✓ Added "${naturalInsert.label}" [${bandInfo.display} | ${bandInfo.brainwave}]`, band);
-            playBrainwave(entry.frequency_hz, band, 0.8);
+            printLine(`✓ Added "${label}" [${bandInfo.icon} ${bandInfo.name} | ${frequency.toFixed(1)}Hz | ${bandInfo.light}]`, band);
+            printLine(`   (${wordCount} words)`, band);
         }
         return;
     }
@@ -439,7 +625,7 @@ async function processCommand(input) {
     }
     
     try {
-        const result = await commands[cmd](args);
+        const result = await commands[cmd](args, input);
         if (result) printLine(result);
     } catch (err) {
         printLine(`Error: ${err.message}`);
@@ -447,274 +633,10 @@ async function processCommand(input) {
 }
 
 // ===============================
-// COMMAND HANDLERS
-// ===============================
-
-commands.help = async () => {
-    return `Available Commands:
-
-  📝 NATURAL LANGUAGE:
-    add label: body         - Add an entry (auto-classified by band)
-
-  🌈 RAINBOW ROAD:
-    rainbow                 - Show frequency spectrum of the hoard
-    sing                    - Play the brainwave scale (requires audio)
-
-  📖 READ:
-    list [page]             - List entries (color-coded by band)
-    spectrum                - Show distribution across bands
-    search <text>           - Search by label or body
-    random                  - Get random entry
-    forgotten               - Show entries with no relationships
-    weave <label>           - Show connections
-    stats                   - Database statistics
-
-  🧹 UTILITIES:
-    clear                   - Clear terminal output
-    audio on/off            - Enable/disable brainwave audio
-
-  🧠 BRAINWAVE SPECTRUM:
-    θ (Theta)   4-8 Hz    → Hermes     (Infrared)   → Dreaming, Threshold
-    α (Alpha)   8-12 Hz   → Apollo     (Sun Gold)   → Calm, Truth
-    β (Low)     12-15 Hz  → Hephaestus (Orange)     → Focused, Forging
-    β (Mid)     15-20 Hz  → Demeter    (Green)      → Active, Growing
-    β (High)    20-30 Hz  → Poseidon   (Blue)       → Alert, Flowing
-    γ (Gamma)   30-40 Hz  → Athena     (Purple)     → Weaving, Wisdom
-    γ (High)    40-100 Hz → Zeus       (Ultraviolet)→ Transcendence`;
-};
-
-commands.clear = async () => {
-    document.getElementById('terminal').innerHTML = '';
-    return null;
-};
-
-commands.rainbow = async () => {
-    const { data, error } = await db
-        .from('terminal_entries')
-        .select('olympian_band, frequency_hz, label, word_count')
-        .order('frequency_hz', { ascending: true });
-    
-    if (error) return `Error: ${error.message}`;
-    if (!data || data.length === 0) return 'No entries found. Add some entries first.';
-    
-    let output = '🌈 RAINBOW ROAD OF MEMORY\n\n';
-    output += 'Hz      Band         State              Entry\n';
-    output += '─────── ──────────── ─────────────────────────────────\n';
-    
-    const bandCounts = {};
-    
-    data.forEach(entry => {
-        const band = entry.olympian_band || getBandFromWordCount(entry.word_count || 1);
-        const config = OLYMPIAN_BANDS[band];
-        if (!config) return;
-        
-        bandCounts[band] = (bandCounts[band] || 0) + 1;
-        
-        const freq = entry.frequency_hz?.toFixed(1) || '?';
-        const barLength = Math.min(Math.floor((entry.frequency_hz || 10) / 2), 30);
-        const bar = '█'.repeat(barLength);
-        
-        output += `${freq.padStart(5)}Hz ${config.icon} ${config.display.padEnd(12)} ${bar}\n`;
-        output += `       └─ ${entry.label.substring(0, 45)}\n\n`;
-    });
-    
-    output += `\n📊 Spectrum Distribution:\n`;
-    for (const [band, count] of Object.entries(bandCounts)) {
-        const config = OLYMPIAN_BANDS[band];
-        output += `   ${config.icon} ${config.display}: ${count} entries\n`;
-    }
-    
-    return output;
-};
-
-commands.sing = async () => {
-    if (!audioEnabled) {
-        return `🔇 Audio is disabled. Type "audio on" to enable brainwave synthesis.`;
-    }
-    
-    initAudio();
-    playScale();
-    return `🎵 The Rainbow Road sings...\n\n   ♪ ✈️ Hermes — 6 Hz (Theta)\n   ♪ ☀️ Apollo — 10 Hz (Alpha)\n   ♪ 🔥 Hephaestus — 13.5 Hz (Low Beta)\n   ♪ 🌾 Demeter — 17.5 Hz (Mid Beta)\n   ♪ 🌊 Poseidon — 25 Hz (High Beta)\n   ♪ 🦉 Athena — 35 Hz (Gamma)\n   ♪ ⚡ Zeus — 70 Hz (High Gamma)\n\n✨ The hoard resonates. ✨`;
-};
-
-commands.audio = async (args) => {
-    const setting = args[0]?.toLowerCase();
-    if (setting === 'on') {
-        audioEnabled = true;
-        initAudio();
-        document.getElementById('audioToggle').textContent = '🔊 audio on';
-        return '🔊 Brainwave audio enabled. Try "sing" or add an entry.';
-    } else if (setting === 'off') {
-        audioEnabled = false;
-        document.getElementById('audioToggle').textContent = '🔇 audio off';
-        return '🔇 Brainwave audio disabled.';
-    }
-    return `Audio is currently ${audioEnabled ? 'ON' : 'OFF'}. Use "audio on" or "audio off".`;
-};
-
-commands.spectrum = async () => {
-    const { data, error } = await db.from('terminal_entries').select('olympian_band, word_count');
-    if (error) return `Error: ${error.message}`;
-    
-    const counts = { hermes: 0, apollo: 0, hephaestus: 0, demeter: 0, poseidon: 0, athena: 0, zeus: 0 };
-    data.forEach(entry => {
-        const band = entry.olympian_band || getBandFromWordCount(entry.word_count || 1);
-        counts[band]++;
-    });
-    
-    let output = `🌈 SPECTRUM OF THE HOARD\n\n`;
-    for (const [band, count] of Object.entries(counts)) {
-        const config = OLYMPIAN_BANDS[band];
-        const bar = '█'.repeat(Math.min(count, 30));
-        const freqRange = `${config.freqRange[0]}-${config.freqRange[1]}Hz`;
-        output += `${config.icon} ${config.display.padEnd(12)} ${bar} ${count} entries (${freqRange})\n`;
-    }
-    return output;
-};
-
-commands.list = async (args) => {
-    let page = 1;
-    let limit = 15;
-    if (args.length > 0 && !isNaN(parseInt(args[0]))) page = parseInt(args[0]);
-    
-    const offset = (page - 1) * limit;
-    const { count, error: countError } = await db.from('terminal_entries').select('*', { count: 'exact', head: true });
-    if (countError) return `Error: ${countError.message}`;
-    if (count === 0) return 'No entries found.';
-    
-    const totalPages = Math.ceil(count / limit);
-    if (page > totalPages) return `Page ${page} doesn't exist. Total pages: ${totalPages}.`;
-    
-    const { data, error } = await db.from('terminal_entries').select('*').order('created_at', { ascending: false }).range(offset, offset + limit - 1);
-    if (error) return `Error: ${error.message}`;
-    
-    let output = `📋 Page ${page}/${totalPages} (${count} total entries):\n\n`;
-    data.forEach((entry, idx) => {
-        const num = offset + idx + 1;
-        const band = entry.olympian_band || getBandFromWordCount(entry.word_count || 1);
-        const config = OLYMPIAN_BANDS[band];
-        const freq = entry.frequency_hz?.toFixed(1) || '?';
-        const preview = entry.body?.substring(0, 50) || '—';
-        output += `${num}. ${config.icon} ${entry.label} [${freq}Hz]\n   ${preview}${entry.body?.length > 50 ? '...' : ''}\n\n`;
-    });
-    return output;
-};
-
-commands.search = async (args) => {
-    const searchTerm = args.join(' ');
-    if (!searchTerm) return 'Usage: search <text>';
-    
-    const { data, error } = await db.from('terminal_entries').select('*').or(`label.ilike.%${searchTerm}%,body.ilike.%${searchTerm}%`).limit(30);
-    if (error) return `Error: ${error.message}`;
-    if (!data || data.length === 0) return `No matches found for "${searchTerm}"`;
-    
-    let output = `🔍 Found ${data.length} matches:\n\n`;
-    data.forEach(entry => {
-        const band = entry.olympian_band || getBandFromWordCount(entry.word_count || 1);
-        const config = OLYMPIAN_BANDS[band];
-        output += `${config.icon} ${entry.label} — ${entry.body?.substring(0, 60) || 'no body'}\n`;
-    });
-    return output;
-};
-
-commands.random = async () => {
-    const { data, error } = await db.from('terminal_entries').select('*');
-    if (error) return `Error: ${error.message}`;
-    if (!data || data.length === 0) return 'No entries found.';
-    
-    const random = data[Math.floor(Math.random() * data.length)];
-    const band = random.olympian_band || getBandFromWordCount(random.word_count || 1);
-    const config = OLYMPIAN_BANDS[band];
-    const freq = random.frequency_hz?.toFixed(1) || '?';
-    
-    if (audioEnabled) playBrainwave(parseFloat(freq), band, 1.5);
-    
-    return `${config.icon} Random Entry [${freq}Hz | ${config.brainwave}]:\nLabel: ${random.label}\nBody: ${random.body}\nCreated: ${random.created_at}`;
-};
-
-commands.stats = async () => {
-    const { count, error } = await db.from('terminal_entries').select('*', { count: 'exact', head: true });
-    if (error) return `Error: ${error.message}`;
-    return `📊 Database Statistics:\n\nTerminal Entries: ${count}\n\n🌈 Rainbow Road spans ${count} entries across θ (4Hz) to γ (100Hz)\n💫 Type "rainbow" to see the full spectrum.`;
-};
-
-commands.forgotten = async () => {
-    try {
-        const { data: entries, error: entriesError } = await db.from('terminal_entries').select('id, label, body, word_count');
-        if (entriesError) return `Error: ${entriesError.message}`;
-        if (!entries || entries.length === 0) return 'No entries found.';
-        
-        const { data: relations, error: relError } = await db.from('terminal_relationships').select('source_id');
-        if (relError && !relError.message.includes('does not exist')) return `Error: ${relError.message}`;
-        
-        const usedIds = new Set((relations || []).map(r => r.source_id));
-        const forgotten = entries.filter(e => !usedIds.has(e.id));
-        
-        if (forgotten.length === 0) return 'No forgotten entries found.';
-        
-        let output = `🌑 Forgotten Entries (${forgotten.length}):\n`;
-        forgotten.slice(0, 15).forEach(e => {
-            const band = getBandFromWordCount(e.word_count || 1);
-            const config = OLYMPIAN_BANDS[band];
-            output += `  ${config.icon} ${e.label}: ${e.body?.substring(0, 50) || 'no body'}\n`;
-        });
-        return output;
-    } catch (err) {
-        return `Error: ${err.message}`;
-    }
-};
-
-commands.weave = async (args) => {
-    if (args.length === 0) return 'Usage: weave <label>';
-    const label = args[0];
-    
-    try {
-        const { data: entry, error: entryError } = await db.from('terminal_entries').select('id, label').eq('label', label).single();
-        if (entryError) return `Entry not found: ${label}`;
-        
-        const { data: rel, error: relError } = await db.from('terminal_relationships').select('target_id, type').eq('source_id', entry.id);
-        if (relError) return `Error: ${relError.message}`;
-        if (!rel || rel.length === 0) return `No connections found for "${label}".`;
-        
-        const targetIds = rel.map(r => r.target_id);
-        const { data: targets, error: targetsError } = await db.from('terminal_entries').select('label').in('id', targetIds);
-        if (targetsError) return `Error: ${targetsError.message}`;
-        
-        let output = `🔗 Connections from "${label}":\n`;
-        targets.forEach((target, idx) => {
-            output += `  → ${target.label} (${rel[idx].type})\n`;
-        });
-        return output;
-    } catch (err) {
-        return `Error: ${err.message}`;
-    }
-};
-
-// ===============================
-// PULSE ENGINE
-// ===============================
-let pulseInterval = null;
-let isPulsing = true;
-
-function startPulse() {
-    if (pulseInterval) clearInterval(pulseInterval);
-    pulseInterval = setInterval(() => {
-        if (isPulsing) {
-            const pulseStatus = document.getElementById('pulseStatus');
-            if (pulseStatus) {
-                const now = new Date();
-                pulseStatus.innerHTML = `❤️ φ-beat ${now.getSeconds()}:${now.getMilliseconds().toString().padStart(3, '0')}`;
-            }
-        }
-    }, 1618);
-}
-
-// ===============================
 // INITIALIZATION
 // ===============================
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
     const input = document.getElementById('command');
-    const audioToggle = document.getElementById('audioToggle');
     
     if (!window.supabase) {
         printLine('ERROR: Supabase client not loaded');
@@ -723,28 +645,13 @@ window.addEventListener('DOMContentLoaded', () => {
     
     db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
-    printLine('Kairos Terminal v2.4 - Rainbow Road of Memory');
+    printLine('Kairos Terminal v2.5 — Divine Classification');
     printLine('✓ Connected to Supabase');
-    printLine('✓ Brainwave spectrum: θ (4Hz) → α → β → γ (100Hz)');
-    printLine('✓ Type "rainbow" to see the spectrum | "sing" to hear the frequencies');
+    printLine('✓ 7 Divine Bands: Hermes (4Hz) → Apollo → Hephaestus → Demeter → Poseidon → Athena → Zeus (100Hz)');
+    printLine('✓ Word count determines divine band and frequency tag');
     printLine('');
-    printLine('Try: add oracle_whisper: The gods speak through brainwaves');
+    printLine('Try: add ealdforn: The ancient one who carries the stolen warrior heart');
     printLine('');
-    
-    startPulse();
-    
-    audioToggle.addEventListener('click', () => {
-        if (audioEnabled) {
-            audioEnabled = false;
-            audioToggle.textContent = '🔇 audio off';
-            printLine('🔇 Brainwave audio disabled.');
-        } else {
-            audioEnabled = true;
-            initAudio();
-            audioToggle.textContent = '🔊 audio on';
-            printLine('🔊 Brainwave audio enabled. Try "sing" or add an entry.');
-        }
-    });
     
     input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
@@ -758,6 +665,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
             input.value = '';
         }
+        
         if (e.key === 'ArrowUp') {
             e.preventDefault();
             if (historyIndex > 0) {
@@ -765,6 +673,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 input.value = commandHistory[historyIndex];
             }
         }
+        
         if (e.key === 'ArrowDown') {
             e.preventDefault();
             if (historyIndex < commandHistory.length - 1) {
